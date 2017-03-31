@@ -1,0 +1,46 @@
+@import "RCarousel";
+
+.root {
+  @extend %RCroot;
+}
+
+.inner {
+  @extend %RCinner;
+}
+
+.item {
+  @extend %RCitem;
+
+  &Active {
+    @extend %RCitemActive;
+  }
+}
+
+.pagination {
+  @extend %RCpagination;
+}
+
+.paginationItem {
+  @extend %RCpaginationItem;
+}
+
+.paginationItemActive {
+  @extend %RCpaginationItemActive;
+}
+
+// .prevNext {
+//   @extend %RCprevNext;
+// }
+//
+// .buttonPrev,
+// .buttonNext {
+//   @extend %RCprevNextButton;
+// }
+//
+// .buttonPrev {
+//   @extend %RCprevNextButtonPrev;
+// }
+//
+// .buttonNext {
+//   @extend %RCprevNextButtonNext;
+// }

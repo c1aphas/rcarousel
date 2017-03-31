@@ -1,0 +1,46 @@
+@import "../src/RCarousel.scss";
+
+.root {
+  @extend %RCroot;
+}
+
+.inner {
+  @extend %RCinner;
+
+  padding: 0;
+  z-index: 30;
+}
+
+.item {
+  @extend %RCitem;
+
+  &Active {
+    @extend %RCitemActive;
+  }
+}
+
+.buttonPrev,
+.buttonNext {
+  position: absolute;
+  top: 85px;
+  width: 15px;
+  height: 26px;
+  display: inline-flex;
+  background-color: transparent;
+  background-size: 15px 26px;
+  background-image: url("./angle-right.svg");
+  cursor: pointer;
+  -webkit-appearance: none;
+  border: 0;
+  z-index: 30;
+  outline: none;
+}
+
+.buttonPrev {
+  left: 25px;
+  transform: rotate(180deg);
+}
+
+.buttonNext {
+  right: 25px;
+}

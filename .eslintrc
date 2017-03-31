@@ -1,0 +1,163 @@
+# Требуемые пакеты
+# - eslint-config-airbnb
+# - babel-eslint
+# - eslint-plugin-react
+# - eslint-plugin-babel
+extends: eslint-config-airbnb
+parser: babel-eslint
+env:
+  browser: true
+  node: true
+plugins:
+  - react
+  - babel
+globals:
+  expect: true
+  test: true
+  __DEV__: true
+  __CLIENT__: true
+  __SERVER__: true
+  __DISABLE_SSR__: true
+  __DEVTOOLS__: true
+  socket: true
+  webpackIsomorphicTools: true
+ecmaFeatures:
+  modules: true
+  jsx: true
+  forOf: true
+  blockBindings: true
+  arrowFunctions: true
+  classes: true
+  defaultParams: true
+  destructuring: true
+  generators: true
+  restParams: true
+  spread: true
+  superInFunctions: true
+  templateStrings: true
+  experimentalObjectRestSpread: true
+rules:
+  # идентация
+  indent:
+    - error
+    - 2
+    - SwitchCase: 1
+  # не допускается использование var, ведь есть блочные let и const
+  no-var: error
+  # не допускается использование let направо и налево: если переменная не переопределяется - пишем const
+  prefer-const: error
+  # не допускаются цепочки методов в одну строчку, если методов больше трех
+  # promise.then(fn1).then(fn2).then(fn3)- можно
+  # promise.then(fn1).then(fn2).then(fn3).then(fn4) - нельзя
+  # promise.then(fn1)
+  #        .then(fn2)
+  #        .then(fn3)
+  #        .then(fn4) - можно (включая другие многострочные разновидности)
+  newline-per-chained-call:
+    - error
+    - ignoreChainWithDepth: 3
+  # допускаются только те неиспользованные переменные и аргументы, в начале которых "_"
+  no-unused-vars:
+    - error
+    - varsIgnorePattern: ^_
+      argsIgnorePattern: ^_
+
+  # допускаются конструкции вида: func && func()
+  no-unused-expressions:
+    - error
+    - allowShortCircuit: true
+
+  # требуется завершающая запятая в многострочных объектах, чтобы blame нормально работал:
+  # если так не делать, то, если ты добавляешь какую-то запятую, то становишься в гите автором строки - нехорошо
+  comma-dangle:
+    - error
+    - always-multiline
+  # не допускаются функции-конструкторы с маленькой буквы, кроме свойств объекта (new object.Property())
+  new-cap:
+    - error
+    - properties: true
+      capIsNewExceptions:
+        - CSSModules
+  # не допускаются пробелы по границам массива: [ 'foo' ] - плохо, ['foo'] - хорошо
+  array-bracket-spacing: 0
+  babel/array-bracket-spacing:
+    - warn
+    - never
+  # не допускаются пробелы по границам объекта: { foo: 'bar' } - плохо, {foo: 'bar'} - хорошо
+  # к сожалению, не разрешает делать import { stuff } from 'module', но может оно и к лучшему
+  object-curly-spacing: 0
+  babel/object-curly-spacing:
+    - warn
+    - never
+  # не допускаются пробелы перед открывающей круглой скобкой в функции: function () - плохо, function() - хорошо
+  space-before-function-paren:
+    - warn
+    - never
+  # и вообще, не допускаются лишние пробелы, за исключением выравнивания знаков "="
+  no-multi-spaces:
+    - warn
+    - exceptions:
+        VariableDeclarator: true
+  # выравнивание ключей в объектах:
+  # не допускается пробел перед двоеточием
+  # допускается пробел или несколько после двоеточия для выравнивания многострочного объекта
+  key-spacing:
+    - warn
+    - singleLine:
+        beforeColon: false
+        afterColon: true
+      multiLine:
+        beforeColon: false
+        afterColon: true
+        align: value
+  # разрешены тернарные операторы
+  no-ternary: 0
+  # разрешены разнотиповые return'ы
+  consistent-return: 0
+  # разрешены continue
+  no-continue: 0
+  # разрешены тернари в анонимных функциях
+  no-confusing-arrow: 0
+  # разрешено присваивание в анонимных функциях
+  no-return-assign: 0
+  # разрешено перезаписывать аргументы
+  no-param-reassign: 0
+  # разрешен пробел после "//" в комментариях - добро
+  spaced-comment: 0
+  # разрешено не называть анонимные функции
+  func-names: 0
+  # напоминалка о случайно забытых console.log-ах, алертах, промтах и дебаггере
+  no-console:
+    - warn
+    - allow:
+      - warn
+      - error
+  no-alert:    warn
+  no-debugger: error
+  # React
+  react/require-extension: 0
+  # Отключено, пока не решена проблема импорта проптайпсов
+  react/forbid-prop-types: 0
+  # разрешены ES6 классы при определении компонентов, у которых нет state
+  react/prefer-stateless-function: 0
+  # .JS а не .JSX
+  react/jsx-filename-extension: 0
+  # Разрешены target="_blank"
+  react/jsx-no-target-blank: 0
+  # cамозакрывающиеся компоненты - ок, самозакрывающийся div - не ок
+  react/self-closing-comp:
+    - warn
+    - component: true
+      html: false
+  # Import
+  # можно импортить без extension
+  import/extensions: 0
+  # без eslint-plugin-import нет смысла проверять резолв импортов
+  import/no-unresolved: 0
+  # cами решаем, что совать в обычные депы, а что - в дев депы
+  import/no-extraneous-dependencies: 0
+  # cами решаем, default или не default нам импортить
+  import/no-named-as-default-member: 0
+  # Внимание! Правила вызывают падение линтера! Включать на свой страх и риск!
+  babel/generator-star-spacing: 0
+  generator-star-spacing: 0
