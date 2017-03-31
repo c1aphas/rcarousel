@@ -1,2 +1,3 @@
-- update docs
+- update and translate docs
 - more examples
+- remove core-decorators dependency

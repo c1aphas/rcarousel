@@ -1,3 +1,5 @@
+# RCarousel
+
 ## Пример
 Для кастомных стилей делаем отдельный файл:
 `import sliderStyles from './slider.scss';`
@@ -55,8 +57,15 @@
 **gap** - отступ между слайдами _(default: 0)_  
 **pagination** - пагинация _(default: false)_  
 **prevNext** - кнопки "вперед/назад" _(default: false)_  
-**stopPropagation** - запрет всплытия _(вложенные слайдеры, default: false)_  
+**stopPropagation** - запрет всплытия событий _(вложенные слайдеры, default: false)_  
 **onSlideChange** - ф-ция обработчик на смену слайда _(default: emptyFunction)_  
+**onInit** - коллбек, вызывается после завершения инициализации слайдера _(default: emptyFunction)_  
+**onSwiped** - коллбек, вызывается после переключения слайда _(default: emptyFunction)_  
+**onClick** - коллбек, вызывается после клика по слайду _(default: emptyFunction)_  
+**loop** - бесконечная карусель _(default: false)_  
+**currentIndex** - индекс активного слайда _(default: 0)_  
+**disableCheckpoints** - отключение эффекта "притягивания" к ближайшему слайду _(default: false)_  
+**isMobile** - включение тач-ивентов для мобилы _(default: false)_  
 **classNames** - набор стилей для кастомизации: _(default: объект со всеми ключами, значение которых '')_  
 - `.root` - враппер
 - `.inner` - контейнер для слайдов
