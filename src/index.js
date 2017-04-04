@@ -68,7 +68,7 @@ class RCarousel extends Component {
 
   handleSizeChange() {
     this.calcCheckpoints();
-    this.goToSlide(this.currentIndex, true);
+    this.goToSlide(this.state.currentIndex, true);
   }
 
   calcCheckpoints() {
