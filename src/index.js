@@ -40,8 +40,8 @@ class RCarousel extends Component {
       parseInt(getComputedStyle(this.innerNode).getPropertyValue('padding-right'), 0);
 
     this.initializeSlider();
-    window.addEventListener('orientationchange', this.handleSizeChange.bind(this));
-    window.addEventListener('resize', this.handleSizeChange.bind(this));
+    window.addEventListener('orientationchange', this.handleViewportResize.bind(this));
+    window.addEventListener('resize', this.handleViewportResize.bind(this));
     // eslint-disable-next-line react/no-did-mount-set-state
     this.setState({rendered: true});
 
@@ -66,7 +66,7 @@ class RCarousel extends Component {
     loop && onInit && onInit();
   }
 
-  handleSizeChange() {
+  handleViewportResize() {
     this.calcCheckpoints();
     this.goToSlide(this.state.currentIndex, true);
   }
