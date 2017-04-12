@@ -1,7 +1,6 @@
 import React, {Component, PropTypes as pt} from 'react';
 import cn from 'classnames';
 import _ from 'lodash';
-import {autobind} from 'core-decorators';
 import swipeable from './swipeable';
 
 @swipeable
@@ -24,6 +23,15 @@ class RCarousel extends Component {
       isClonesRendered: false,
       rendered:         false,
     };
+
+    this.initializeItems = this.initializeItems.bind(this);
+    this.initializeSlider = this.initializeSlider.bind(this);
+    this.handleTransitionEnd = this.handleTransitionEnd.bind(this);
+    this.handlePaginationClick = this.handlePaginationClick.bind(this);
+    this.handleItemClick = this.handleItemClick.bind(this);
+    this.handlePrevClick = this.handlePrevClick.bind(this);
+    this.handleNextClick = this.handleNextClick.bind(this);
+    this.renderItem = this.renderItem.bind(this);
   }
 
   componentWillMount() {
@@ -106,7 +114,6 @@ class RCarousel extends Component {
   isToggled = false;
   isLastReached = false;
 
-  @autobind
   initializeItems(childrenItems) {
     this.setState({
       items:      childrenItems.map((item, i) => this.renderItem(item, i)),
@@ -114,7 +121,6 @@ class RCarousel extends Component {
     });
   }
 
-  @autobind
   initializeSlider() {
     const {loop} = this.props;
     this.calcCheckpoints();
@@ -170,7 +176,6 @@ class RCarousel extends Component {
     }
   }
 
-  @autobind
   handleTransitionEnd() {
     const {onSwiped, loop} = this.props;
     if (!this.isToggled || !this.isSwiped) {
@@ -190,14 +195,12 @@ class RCarousel extends Component {
     onSwiped && onSwiped(this.currentIndex);
   }
 
-  @autobind
   handlePaginationClick(e) {
     e.stopPropagation();
     const idx = parseInt(e.target.dataset.idx, 0);
     this.goToSlide(idx + 4);
   }
 
-  @autobind
   handleItemClick(i) {
     const {loop, onClick} = this.props;
     const clickedIndex = loop ? i % this.state.itemsCount : i;
@@ -211,13 +214,11 @@ class RCarousel extends Component {
     onSwiped && onSwiped(this.currentIndex, this.isLastReached);
   }
 
-  @autobind
   handlePrevClick() {
     const {currentIndex} = this.state;
     currentIndex !== 0 && this.togglePrevNext(currentIndex - 1);
   }
 
-  @autobind
   handleNextClick() {
     const {currentIndex} = this.state;
     !this.isLastReached && this.togglePrevNext(currentIndex + 1);
@@ -268,7 +269,6 @@ class RCarousel extends Component {
       : this.state.currentIndex === i;
   }
 
-  @autobind
   renderItem(item, i) {
     const {classNames, gap, isMobile} = this.props;
     const additionalAttrs = {};
