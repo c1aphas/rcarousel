@@ -1,6 +1,7 @@
 import React, {Component, PropTypes as pt} from 'react';
 import cn from 'classnames';
-import _ from 'lodash';
+import _times from 'lodash/times';
+import _findIndex from 'lodash/findIndex';
 import swipeable from './swipeable';
 
 @swipeable
@@ -86,7 +87,7 @@ class RCarousel extends Component {
     this.itemWidths = [];
     this.widthTotal = 0;
 
-    _.times(
+    _times(
       loop ? this.state.itemsCount * 3 : this.state.itemsCount,
       (i) => {
         const itemNode = this.itemNodes[
@@ -168,7 +169,7 @@ class RCarousel extends Component {
       RCarousel.setStylesWithPrefixes(this.innerNode, this.currentDelta, 0);
     } else {
         // Фикс на ближайший слайд
-      const nextIndex = _.findIndex(this.checkpoints, (checkpoint, i) =>
+      const nextIndex = _findIndex(this.checkpoints, (checkpoint, i) =>
            Math.abs(nextDelta) > checkpoint && Math.abs(nextDelta) < this.checkpoints[i + 1]
       ) + (loop ? 0 : 1);
       this.isToggled = nextIndex !== this.state.currentIndex;
@@ -297,7 +298,7 @@ class RCarousel extends Component {
   renderLoopItems() {
     const {children} = this.props;
     const items = [];
-    _.times(this.state.itemsCount * 3, (i) => {
+    _times(this.state.itemsCount * 3, (i) => {
       items.push(this.renderItem(children[i % children.length], i));
     });
     // eslint-disable-next-line react/no-did-mount-set-state
