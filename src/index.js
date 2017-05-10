@@ -1,4 +1,5 @@
-import React, {Component, PropTypes as pt} from 'react';
+import React, {Component} from 'react';
+import * as pt from 'prop-types';
 import cn from 'classnames';
 import _times from 'lodash/times';
 import _findIndex from 'lodash/findIndex';
