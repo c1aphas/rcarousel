@@ -363,7 +363,7 @@ class RCarousel extends Component {
                   {[classNames.paginationItemActive]:
                     loop
                       ? (this.state.currentIndex + 1) % 5 === i
-                      : i === 0,
+                      : i === this.state.currentIndex,
                   },
                 )}
                 onClick={this.handlePaginationClick}
