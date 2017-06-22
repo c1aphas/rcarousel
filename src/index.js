@@ -76,6 +76,8 @@ class RCarousel extends Component {
     loop && onInit && onInit();
   }
 
+  isSliderWidthExceedScreen = true
+
   handleViewportResize() {
     this.calcCheckpoints();
     this.goToSlide(this.state.currentIndex, true);
@@ -105,6 +107,7 @@ class RCarousel extends Component {
         );
       }
     );
+    this.isSliderWidthExceedScreen = this.widthTotal > screen.width;
   }
 
   currentDelta = 0;
@@ -151,7 +154,7 @@ class RCarousel extends Component {
       RCarousel.setStylesWithPrefixes(this.innerNode, 0);
     } else
     // Фикс на последний слайд
-    if (nextDelta < maxShift) {
+    if (nextDelta < maxShift && this.isSliderWidthExceedScreen) {
       this.currentIndex = this.state.itemsCount - 1;
       this.currentDelta = maxShift;
       RCarousel.setStylesWithPrefixes(this.innerNode, maxShift);
