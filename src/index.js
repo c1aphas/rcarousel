@@ -153,8 +153,8 @@ class RCarousel extends Component {
     // Фикс на последний слайд
     if (nextDelta < maxShift) {
       this.currentIndex = this.state.itemsCount - 1;
-      this.currentDelta = maxShift;
-      RCarousel.setStylesWithPrefixes(this.innerNode, maxShift);
+      this.currentDelta = Math.min(maxShift, 0);
+      RCarousel.setStylesWithPrefixes(this.innerNode, this.currentDelta);
     } else
     // Свайп-скролл без фиксов на ближайший слайд
     if (disableCheckpoints) {
@@ -363,7 +363,7 @@ class RCarousel extends Component {
                   {[classNames.paginationItemActive]:
                     loop
                       ? (this.state.currentIndex + 1) % 5 === i
-                      : i === 0,
+                      : i === this.state.currentIndex,
                   },
                 )}
                 onClick={this.handlePaginationClick}
