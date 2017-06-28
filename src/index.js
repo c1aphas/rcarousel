@@ -115,6 +115,7 @@ class RCarousel extends Component {
   itemNodes = [];
   isToggled = false;
   isLastReached = false;
+  isSwippingInner = false;
 
   initializeItems(childrenItems) {
     this.setState({
@@ -130,11 +131,19 @@ class RCarousel extends Component {
   }
 
   swipingLeft(e, delta) {
-    RCarousel.setStylesWithPrefixes(this.innerNode, this.currentDelta - delta.x, 0);
+    const isSwippingLast = this.currentIndex === this.itemNodes.length - 1 && delta.x > 0;
+    this.isSwippingInner = this.props.isRelatedInnerSlider && isSwippingLast;
+    if (!this.isSwippingInner) {
+      RCarousel.setStylesWithPrefixes(this.innerNode, this.currentDelta - delta.x, 0);
+    }
   }
 
   swipingRight(e, delta) {
-    RCarousel.setStylesWithPrefixes(this.innerNode, this.currentDelta - delta.x, 0);
+    const isSwippingFirst = this.currentIndex === 0 && delta.x < 0;
+    this.isSwippingInner = this.props.isRelatedInnerSlider && isSwippingFirst;
+    if (!this.isSwippingInner) {
+      RCarousel.setStylesWithPrefixes(this.innerNode, this.currentDelta - delta.x, 0);
+    }
   }
 
   swiped(e, {x: deltaX}) {
@@ -392,17 +401,18 @@ RCarousel.defaultProps = {
     buttonNext:           '',
     buttonPrev:           '',
   },
-  pagination:         false,
-  prevNext:           false,
-  stopPropagation:    false,
-  loop:               false,
-  onSlideChange:      () => {},
-  onInit:             () => {},
-  onSwiped:           () => {},
-  onClick:            () => {},
-  currentIndex:       -1,
-  disableCheckpoints: false,
-  isMobile:           false,
+  pagination:           false,
+  prevNext:             false,
+  stopPropagation:      false,
+  loop:                 false,
+  onSlideChange:        () => {},
+  onInit:               () => {},
+  onSwiped:             () => {},
+  onClick:              () => {},
+  currentIndex:         -1,
+  disableCheckpoints:   false,
+  isMobile:             false,
+  isRelatedInnerSlider: false,
 };
 
 RCarousel.propTypes = {
@@ -421,11 +431,12 @@ RCarousel.propTypes = {
     buttonNext:           pt.string,
     buttonPrev:           pt.string,
   }),
-  loop:               pt.bool,
-  pagination:         pt.bool,
-  prevNext:           pt.bool,
-  disableCheckpoints: pt.bool,
-  children:           pt.arrayOf(
+  loop:                 pt.bool,
+  pagination:           pt.bool,
+  prevNext:             pt.bool,
+  disableCheckpoints:   pt.bool,
+  isRelatedInnerSlider: pt.bool,
+  children:             pt.arrayOf(
     pt.node
   ).isRequired,
   onInit:       pt.func,

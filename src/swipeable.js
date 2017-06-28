@@ -45,7 +45,7 @@ export default function(WrappedComponent) {
     handleTouchStart(e) {
       this.shouldBlockScrollX = false;
       this.shouldBlockScrollY = false;
-      this.wci.props.stopPropagation && e.stopPropagation();
+      !this.wci.isSwippingInner && this.wci.props.stopPropagation && e.stopPropagation();
       this.initialX = e.touches[0].clientX;
       this.initialY = e.touches[0].clientY;
 
@@ -64,7 +64,7 @@ export default function(WrappedComponent) {
     }
 
     handleTouchMove(e) {
-      this.wci.props.stopPropagation && e.stopPropagation();
+      !this.wci.isSwippingInner && this.wci.props.stopPropagation && e.stopPropagation();
       const nextDelta = {
         x: this.initialX - e.touches[0].clientX,
         y: this.initialY - e.touches[0].clientY,
@@ -107,7 +107,7 @@ export default function(WrappedComponent) {
     }
 
     handleTouchEnd(e) {
-      this.wci.props.stopPropagation && e.stopPropagation();
+      !this.wci.isSwippingInner && this.wci.props.stopPropagation && e.stopPropagation();
       e.cancelable && e.preventDefault();
       this.wci.swiped && this.wci.swiped(e, this.delta);
       if (this.direction === DIRECTION_LEFT) {
