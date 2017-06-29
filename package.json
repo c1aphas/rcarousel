@@ -1,6 +1,6 @@
 {
   "name": "rcarousel",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "React carousel component with touch support",
   "repository": "https://github.com/c1aphas/rcarousel",
   "main": "./dist/rcarousel.js",
