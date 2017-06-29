@@ -7,15 +7,6 @@ import swipeable from './swipeable';
 
 @swipeable
 class RCarousel extends Component {
-  static setStylesWithPrefixes(node, delta, duration = 0.2) {
-    requestAnimationFrame(() => {
-      Object.assign(node.style, {
-        transform:          `translate3d(${delta}px, 0, 0)`,
-        transitionDuration: `${duration}s`,
-      });
-    });
-  }
-
   constructor(props) {
     super(props);
     this.state = {
@@ -76,6 +67,16 @@ class RCarousel extends Component {
     loop && onInit && onInit();
   }
 
+  setStylesWithPrefixes(node, delta, duration = 0.2) {
+    requestAnimationFrame(() => {
+      Object.assign(node.style, {
+        transform:          `translate3d(${delta}px, 0, 0)`,
+        transitionDuration: `${duration}s`,
+      });
+    });
+    this.swippingDelta = delta;
+  }
+
   handleViewportResize() {
     this.calcCheckpoints();
     this.goToSlide(this.state.currentIndex, true);
@@ -97,6 +98,7 @@ class RCarousel extends Component {
             : i
         ];
         const itemWidth = itemNode.offsetWidth + gap;
+        this.itemWidth = itemWidth;
 
         this.itemWidths.push(itemWidth);
         this.widthTotal += itemWidth;
@@ -108,6 +110,7 @@ class RCarousel extends Component {
   }
 
   currentDelta = 0;
+  swippingDelta = 0;
   widthTotal = 0;
   checkpoints = [];
   itemWidth = 0;
@@ -130,11 +133,11 @@ class RCarousel extends Component {
   }
 
   swipingLeft(e, delta) {
-    RCarousel.setStylesWithPrefixes(this.innerNode, this.currentDelta - delta.x, 0);
+    this.setStylesWithPrefixes(this.innerNode, this.currentDelta - delta.x, 0);
   }
 
   swipingRight(e, delta) {
-    RCarousel.setStylesWithPrefixes(this.innerNode, this.currentDelta - delta.x, 0);
+    this.setStylesWithPrefixes(this.innerNode, this.currentDelta - delta.x, 0);
   }
 
   swiped(e, {x: deltaX}) {
@@ -148,13 +151,13 @@ class RCarousel extends Component {
     if (nextDelta > 0) {
       this.currentIndex = 0;
       this.currentDelta = 0;
-      RCarousel.setStylesWithPrefixes(this.innerNode, 0);
+      this.setStylesWithPrefixes(this.innerNode, 0);
     } else
     // Фикс на последний слайд
     if (nextDelta < maxShift) {
       this.currentIndex = this.state.itemsCount - 1;
       this.currentDelta = Math.min(maxShift, 0);
-      RCarousel.setStylesWithPrefixes(this.innerNode, this.currentDelta);
+      this.setStylesWithPrefixes(this.innerNode, this.currentDelta);
     } else
     // Свайп-скролл без фиксов на ближайший слайд
     if (disableCheckpoints) {
@@ -167,7 +170,7 @@ class RCarousel extends Component {
         }
       }
       this.currentDelta = nextDelta;
-      RCarousel.setStylesWithPrefixes(this.innerNode, this.currentDelta, 0);
+      this.setStylesWithPrefixes(this.innerNode, this.currentDelta, 0);
     } else {
         // Фикс на ближайший слайд
       const nextIndex = _findIndex(this.checkpoints, (checkpoint, i) =>
@@ -252,7 +255,7 @@ class RCarousel extends Component {
       }
     }
 
-    RCarousel.setStylesWithPrefixes(
+    this.setStylesWithPrefixes(
       this.innerNode,
       this.currentDelta,
       withoutAnimation ? 0 : transitionDuration
@@ -392,17 +395,18 @@ RCarousel.defaultProps = {
     buttonNext:           '',
     buttonPrev:           '',
   },
-  pagination:         false,
-  prevNext:           false,
-  stopPropagation:    false,
-  loop:               false,
-  onSlideChange:      () => {},
-  onInit:             () => {},
-  onSwiped:           () => {},
-  onClick:            () => {},
-  currentIndex:       -1,
-  disableCheckpoints: false,
-  isMobile:           false,
+  pagination:           false,
+  prevNext:             false,
+  stopPropagation:      false,
+  loop:                 false,
+  onSlideChange:        () => {},
+  onInit:               () => {},
+  onSwiped:             () => {},
+  onClick:              () => {},
+  currentIndex:         -1,
+  disableCheckpoints:   false,
+  isMobile:             false,
+  isRelatedInnerSlider: false,
 };
 
 RCarousel.propTypes = {
@@ -421,11 +425,12 @@ RCarousel.propTypes = {
     buttonNext:           pt.string,
     buttonPrev:           pt.string,
   }),
-  loop:               pt.bool,
-  pagination:         pt.bool,
-  prevNext:           pt.bool,
-  disableCheckpoints: pt.bool,
-  children:           pt.arrayOf(
+  loop:                 pt.bool,
+  pagination:           pt.bool,
+  prevNext:             pt.bool,
+  disableCheckpoints:   pt.bool,
+  isRelatedInnerSlider: pt.bool,
+  children:             pt.arrayOf(
     pt.node
   ).isRequired,
   onInit:       pt.func,
