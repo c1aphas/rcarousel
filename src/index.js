@@ -245,7 +245,7 @@ class RCarousel extends Component {
       const nextDelta = -this.itemWidths.slice(
         0,
         loop ? nextIndex + 1 : nextIndex
-      ).reduce((a, b) => a + b);
+      ).reduce((a, b) => a + b, 0);
       if (nextDelta <= lastIndexDelta) {
         this.isLastReached = true;
         this.currentDelta = lastIndexDelta;
