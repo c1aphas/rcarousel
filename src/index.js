@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React from 'react';
 import * as pt from 'prop-types';
 import cn from 'classnames';
 import _times from 'lodash/times';
@@ -6,19 +6,16 @@ import _findIndex from 'lodash/findIndex';
 import swipeable from './swipeable';
 
 @swipeable
-class RCarousel extends Component {
+class RCarousel extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       realIndex:        0,
       currentIndex:     0,
-      items:            [],
       isClonesRendered: false,
       rendered:         false,
     };
 
-    this.initializeItems = this.initializeItems.bind(this);
-    this.initializeSlider = this.initializeSlider.bind(this);
     this.handleTransitionEnd = this.handleTransitionEnd.bind(this);
     this.handlePaginationClick = this.handlePaginationClick.bind(this);
     this.handleItemClick = this.handleItemClick.bind(this);
@@ -27,24 +24,21 @@ class RCarousel extends Component {
     this.renderItem = this.renderItem.bind(this);
   }
 
-  componentWillMount() {
-    // server rendering stage.
-    this.initializeItems(this.props.children);
-  }
-
   componentDidMount() {
-    // front rendering stage, активируем функционал слайдера
-    const {onInit, loop} = this.props;
+    const {onInit, loop, children} = this.props;
+    const itemsCount = children.length;
 
     this.innerPadding =
       parseInt(getComputedStyle(this.innerNode).getPropertyValue('padding-left'), 0) +
       parseInt(getComputedStyle(this.innerNode).getPropertyValue('padding-right'), 0);
 
-    this.initializeSlider();
+    this.calcCheckpoints();
     window.addEventListener('orientationchange', this.handleViewportResize.bind(this));
     window.addEventListener('resize', this.handleViewportResize.bind(this));
     // eslint-disable-next-line react/no-did-mount-set-state
     this.setState({rendered: true});
+
+    loop && this.goToSlide(itemsCount - 1, true);
 
     !loop && onInit && onInit();
   }
@@ -57,9 +51,7 @@ class RCarousel extends Component {
 
   async componentDidUpdate(prevProps) {
     const {children, currentIndex, loop, onInit} = this.props;
-    // Если изменились children, нужно все заново пересчитать
     if (children.length !== prevProps.children.length) {
-      await this.initializeItems(children);
       await this.calcCheckpoints();
       this.goToSlide(currentIndex, true);
     }
@@ -83,18 +75,18 @@ class RCarousel extends Component {
   }
 
   calcCheckpoints() {
-    const {gap, loop} = this.props;
+    const {gap, loop, children} = this.props;
 
     this.checkpoints = [];
     this.itemWidths = [];
     this.widthTotal = 0;
 
     _times(
-      loop ? this.state.itemsCount * 3 : this.state.itemsCount,
+      loop ? children.length * 3 : children.length,
       (i) => {
         const itemNode = this.itemNodes[
           loop
-            ? i % this.state.itemsCount
+            ? i % children.length
             : i
         ];
         const itemWidth = itemNode.offsetWidth + gap;
@@ -119,19 +111,6 @@ class RCarousel extends Component {
   isToggled = false;
   isLastReached = false;
 
-  initializeItems(childrenItems) {
-    this.setState({
-      items:      childrenItems.map((item, i) => this.renderItem(item, i)),
-      itemsCount: childrenItems.length,
-    });
-  }
-
-  initializeSlider() {
-    const {loop} = this.props;
-    this.calcCheckpoints();
-    loop && this.renderLoopItems();
-  }
-
   swipingLeft(e, delta) {
     this.setStylesWithPrefixes(this.innerNode, this.currentDelta - delta.x, 0);
   }
@@ -143,7 +122,7 @@ class RCarousel extends Component {
   swiped(e, {x: deltaX}) {
     this.isSwiped = true;
     this.isToggled = false;
-    const {disableCheckpoints, loop} = this.props;
+    const {disableCheckpoints, loop, children} = this.props;
     const nextDelta = this.currentDelta - deltaX;
     const maxShift = window.innerWidth - this.widthTotal - this.innerPadding;
 
@@ -155,7 +134,7 @@ class RCarousel extends Component {
     } else
     // Фикс на последний слайд
     if (nextDelta < maxShift) {
-      this.currentIndex = this.state.itemsCount - 1;
+      this.currentIndex = children.length - 1;
       this.currentDelta = Math.min(maxShift, 0);
       this.setStylesWithPrefixes(this.innerNode, this.currentDelta);
     } else
@@ -182,13 +161,13 @@ class RCarousel extends Component {
   }
 
   handleTransitionEnd() {
-    const {onSwiped, loop} = this.props;
+    const {onSwiped, loop, children} = this.props;
     if (!this.isToggled || !this.isSwiped) {
       return false;
     }
     if (loop) {
       const min = this.itemNodes.length / 3;
-      const max = this.itemNodes.length - this.state.itemsCount - 1;
+      const max = this.itemNodes.length - children.length - 1;
       if (this.state.currentIndex < min - 1) {
         // достигли первого слайда, показали последний
         this.goToSlide(max - 1, true);
@@ -207,8 +186,8 @@ class RCarousel extends Component {
   }
 
   handleItemClick(i) {
-    const {loop, onClick} = this.props;
-    const clickedIndex = loop ? i % this.state.itemsCount : i;
+    const {loop, onClick, children} = this.props;
+    const clickedIndex = loop ? i % children.length : i;
 
     onClick && onClick(clickedIndex, this.state);
   }
@@ -230,17 +209,17 @@ class RCarousel extends Component {
   }
 
   goToSlide(nextIndex, withoutAnimation) {
-    const {transitionDuration, loop, gap} = this.props;
-    const lastIndexDelta = (this.innerNode.offsetWidth - this.widthTotal) + gap;
+    const {transitionDuration, loop, gap, children} = this.props;
+    const lastIndexDelta = (this.innerNode.offsetWidth - this.widthTotal - this.innerPadding) + gap;
     this.currentIndex = nextIndex;
-
-    if (!loop && this.widthTotal < window.innerWidth) {
+    if (!loop && this.widthTotal + this.innerPadding < window.innerWidth) {
       this.currentDelta = 0;
-    } else if (!loop && nextIndex === this.state.itemsCount - 1) {
+    } else if (!loop && nextIndex === children.length - 1) {
       this.isLastReached = true;
       this.currentDelta = lastIndexDelta;
     } else if (!loop && nextIndex === 0) {
       this.currentDelta = 0;
+      this.isLastReached = false;
     } else {
       const nextDelta = -this.itemWidths.slice(
         0,
@@ -262,7 +241,7 @@ class RCarousel extends Component {
     );
     this.setState({
       currentIndex: nextIndex,
-      realIndex:    (nextIndex + 1) % this.state.itemsCount,
+      realIndex:    (nextIndex + 1) % children.length,
     });
   }
 
@@ -282,10 +261,9 @@ class RCarousel extends Component {
     } else {
       additionalAttrs.onClick = () => this.handleItemClick(i);
     }
-
     return (
       <div
-        key={`${i}`}
+        key={i}
         className={cn(
           classNames.item,
           {[classNames.itemActive]: this.isItemActive(i)},
@@ -294,20 +272,23 @@ class RCarousel extends Component {
         style={{marginLeft: gap}}
         {...additionalAttrs}
       >
-        <item.type {...item.props} />
+        {item}
       </div>
     );
   }
 
   renderLoopItems() {
     const {children} = this.props;
+    const itemsCount = children.length;
     const items = [];
-    _times(this.state.itemsCount * 3, (i) => {
-      items.push(this.renderItem(children[i % children.length], i));
+    _times(itemsCount * 3, (i) => {
+      items.push(this.renderItem(children[i % itemsCount], i));
     });
-    // eslint-disable-next-line react/no-did-mount-set-state
-    this.setState({items});
-    this.goToSlide(this.state.itemsCount - 1, true);
+    return items;
+  }
+
+  renderItems() {
+    return this.props.children.map(this.renderItem);
   }
 
   renderPrevNext() {
@@ -334,7 +315,6 @@ class RCarousel extends Component {
 
   render() {
     const {classNames, loop} = this.props;
-    const {items} = this.state;
 
     return (
       <div
@@ -348,7 +328,7 @@ class RCarousel extends Component {
           ref={node => this.innerNode = node}
           onTransitionEnd={this.handleTransitionEnd}
         >
-          {items.map((item, i) => this.renderItem(item.props.children, i))}
+          { loop ? this.renderLoopItems() : this.renderItems() }
         </div>
         { this.props.prevNext && this.renderPrevNext() }
         { this.props.pagination && (
@@ -365,7 +345,7 @@ class RCarousel extends Component {
                   classNames.paginationItem,
                   {[classNames.paginationItemActive]:
                     loop
-                      ? (this.state.currentIndex + 1) % 5 === i
+                      ? i === (this.state.currentIndex + 1) % 5
                       : i === this.state.currentIndex,
                   },
                 )}
@@ -425,12 +405,11 @@ RCarousel.propTypes = {
     buttonNext:           pt.string,
     buttonPrev:           pt.string,
   }),
-  loop:                 pt.bool,
-  pagination:           pt.bool,
-  prevNext:             pt.bool,
-  disableCheckpoints:   pt.bool,
-  isRelatedInnerSlider: pt.bool,
-  children:             pt.arrayOf(
+  loop:               pt.bool,
+  pagination:         pt.bool,
+  prevNext:           pt.bool,
+  disableCheckpoints: pt.bool,
+  children:           pt.arrayOf(
     pt.node
   ).isRequired,
   onInit:       pt.func,
