@@ -16,6 +16,7 @@ export default function(WrappedComponent) {
     initialized = false
     shouldBlockScrollY = false
     shouldBlockScrollX = false
+    isMoving = false
 
     getDirection(nextDelta) {
       const deltaX = Math.abs(nextDelta.x - this.prevDelta.x);
@@ -63,6 +64,7 @@ export default function(WrappedComponent) {
       }
       this.initialX = e.touches[0].clientX;
       this.initialY = e.touches[0].clientY;
+      this.isMoving = false;
 
       this.wci.swipeStart && this.wci.swipeStart(e);
     }
@@ -122,6 +124,7 @@ export default function(WrappedComponent) {
           break;
         default:
       }
+      this.isMoving = true;
       this.wci.swiping && this.wci.swiping(e, this.delta);
 
       this.shouldBlockScrollY && e.preventDefault();
@@ -131,16 +134,19 @@ export default function(WrappedComponent) {
       if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
         e.stopPropagation();
       }
-      e.cancelable && e.preventDefault();
-      this.wci.swiped && this.wci.swiped(e, this.delta);
-      if (this.direction === DIRECTION_LEFT) {
-        this.wci.swipedLeft && this.wci.swipedLeft(e, this.delta);
-      } else if (this.direction === DIRECTION_RIGHT) {
-        this.wci.swipedRight && this.wci.swipedRight(e, this.delta);
+      if (this.isMoving) {
+        e.cancelable && e.preventDefault();
+        this.wci.swiped && this.wci.swiped(e, this.delta);
+        if (this.direction === DIRECTION_LEFT) {
+          this.wci.swipedLeft && this.wci.swipedLeft(e, this.delta);
+        } else if (this.direction === DIRECTION_RIGHT) {
+          this.wci.swipedRight && this.wci.swipedRight(e, this.delta);
+        }
       }
       this.shouldBlockScrollX = false;
       this.shouldBlockScrollY = false;
       this.prevDelta = {x: 0, y: 0};
+      this.isMoving = false;
     }
 
     render() {
