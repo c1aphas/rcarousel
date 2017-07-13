@@ -1,8 +1,6 @@
 import React from 'react';
 import * as pt from 'prop-types';
 import cn from 'classnames';
-import _times from 'lodash/times';
-import _findIndex from 'lodash/findIndex';
 import swipeable from './swipeable';
 
 @swipeable
@@ -22,6 +20,7 @@ class RCarousel extends React.Component {
     this.handlePrevClick = this.handlePrevClick.bind(this);
     this.handleNextClick = this.handleNextClick.bind(this);
     this.renderItem = this.renderItem.bind(this);
+    this.handleViewportResize = this.handleViewportResize.bind(this);
   }
 
   componentDidMount() {
@@ -33,8 +32,8 @@ class RCarousel extends React.Component {
       parseInt(getComputedStyle(this.innerNode).getPropertyValue('padding-right'), 0);
 
     this.calcCheckpoints();
-    window.addEventListener('orientationchange', this.handleViewportResize.bind(this));
-    window.addEventListener('resize', this.handleViewportResize.bind(this));
+    window.addEventListener('orientationchange', this.handleViewportResize);
+    window.addEventListener('resize', this.handleViewportResize);
     // eslint-disable-next-line react/no-did-mount-set-state
     this.setState({rendered: true});
 
@@ -49,14 +48,19 @@ class RCarousel extends React.Component {
     }
   }
 
-  async componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps) {
     const {children, currentIndex, loop, onInit} = this.props;
     if (children.length !== prevProps.children.length) {
-      await this.calcCheckpoints();
+      this.calcCheckpoints();
       this.goToSlide(currentIndex, true);
     }
 
     loop && onInit && onInit();
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('orientationchange', this.handleViewportResize);
+    window.removeEventListener('resize', this.handleViewportResize);
   }
 
   setStylesWithPrefixes(node, delta, duration = 0.2) {
@@ -75,30 +79,20 @@ class RCarousel extends React.Component {
   }
 
   calcCheckpoints() {
-    const {gap, loop, children} = this.props;
+    const {gap} = this.props;
 
     this.checkpoints = [];
     this.itemWidths = [];
     this.widthTotal = 0;
 
-    _times(
-      loop ? children.length * 3 : children.length,
-      (i) => {
-        const itemNode = this.itemNodes[
-          loop
-            ? i % children.length
-            : i
-        ];
-        const itemWidth = itemNode.offsetWidth + gap;
-        this.itemWidth = itemWidth;
-
+    for (let i = 0; i < this.itemNodes.length; i++) {
+      if (this.itemNodes[i]) {
+        const itemWidth = this.itemNodes[i].offsetWidth + gap;
         this.itemWidths.push(itemWidth);
         this.widthTotal += itemWidth;
-        itemNode && this.checkpoints.push(
-          ((itemNode.offsetWidth + gap) / 2) + ((itemNode.offsetWidth + gap) * i)
-        );
+        this.checkpoints.push((itemWidth / 2) + this.widthTotal);
       }
-    );
+    }
   }
 
   currentDelta = 0;
@@ -127,13 +121,13 @@ class RCarousel extends React.Component {
     const maxShift = window.innerWidth - this.widthTotal - this.innerPadding;
 
     // Фикс на первый слайд
-    if (nextDelta > 0) {
+    if (!loop && nextDelta > 0) {
       this.currentIndex = 0;
       this.currentDelta = 0;
       this.setStylesWithPrefixes(this.innerNode, 0);
     } else
     // Фикс на последний слайд
-    if (nextDelta < maxShift) {
+    if (!loop && nextDelta < maxShift) {
       this.currentIndex = children.length - 1;
       this.currentDelta = Math.min(maxShift, 0);
       this.setStylesWithPrefixes(this.innerNode, this.currentDelta);
@@ -151,13 +145,23 @@ class RCarousel extends React.Component {
       this.currentDelta = nextDelta;
       this.setStylesWithPrefixes(this.innerNode, this.currentDelta, 0);
     } else {
-        // Фикс на ближайший слайд
-      const nextIndex = _findIndex(this.checkpoints, (checkpoint, i) =>
-           Math.abs(nextDelta) > checkpoint && Math.abs(nextDelta) < this.checkpoints[i + 1]
-      ) + (loop ? 0 : 1);
+      // Фикс на ближайший слайд
+      const nextIndex = this.findNextIndex(nextDelta);
       this.isToggled = nextIndex !== this.state.currentIndex;
       this.goToSlide(nextIndex);
     }
+  }
+
+  findNextIndex(delta) {
+    const val = Math.abs(delta);
+    for (let i = 0; i < this.checkpoints.length; i++) {
+      if (i === this.checkpoints.length - 1) return -1;
+      if (val > this.checkpoints[i] && val <= this.checkpoints[i + 1]) return i;
+    }
+    return -1;
+    // return this.checkpoints.findIndex((checkpoint, i, checkpoints) =>
+    //     Math.abs(delta) > checkpoint && Math.abs(delta) < checkpoints[i + 1]
+    //   ) + (this.props.loop ? 0 : 1);
   }
 
   handleTransitionEnd() {
@@ -210,17 +214,12 @@ class RCarousel extends React.Component {
 
   goToSlide(nextIndex, withoutAnimation) {
     const {transitionDuration, loop, gap, children} = this.props;
+    if (!this.innerNode || nextIndex < 0) return;
+
     const lastIndexDelta = (this.innerNode.offsetWidth - this.widthTotal - this.innerPadding) + gap;
     this.currentIndex = nextIndex;
-    if (!loop && this.widthTotal + this.innerPadding < window.innerWidth) {
-      this.currentDelta = 0;
-    } else if (!loop && nextIndex === children.length - 1) {
-      this.isLastReached = true;
-      this.currentDelta = lastIndexDelta;
-    } else if (!loop && nextIndex === 0) {
-      this.currentDelta = 0;
-      this.isLastReached = false;
-    } else {
+
+    if (loop) {
       const nextDelta = -this.itemWidths.slice(
         0,
         loop ? nextIndex + 1 : nextIndex
@@ -232,7 +231,16 @@ class RCarousel extends React.Component {
         this.isLastReached = false;
         this.currentDelta = nextDelta;
       }
-    }
+    } else
+      if (this.widthTotal + this.innerPadding < window.innerWidth) {
+        this.currentDelta = 0;
+      } else if (nextIndex === children.length - 1) {
+        this.isLastReached = true;
+        this.currentDelta = lastIndexDelta;
+      } else if (nextIndex === 0) {
+        this.currentDelta = 0;
+        this.isLastReached = false;
+      }
 
     this.setStylesWithPrefixes(
       this.innerNode,
@@ -281,9 +289,9 @@ class RCarousel extends React.Component {
     const {children} = this.props;
     const itemsCount = children.length;
     const items = [];
-    _times(itemsCount * 3, (i) => {
+    for (let i = 0; i < itemsCount * 3; i++) {
       items.push(this.renderItem(children[i % itemsCount], i));
-    });
+    }
     return items;
   }
 
