@@ -56,7 +56,7 @@ class RCarousel extends React.Component {
       this.goToSlide(currentIndex, true);
     }
 
-    loop && onInit && onInit();
+    loop && onInit && onInit(); // здесь странно вызывать onInit();
   }
 
   setStylesWithPrefixes(node, delta, duration = 0.2) {
@@ -124,6 +124,7 @@ class RCarousel extends React.Component {
     this.isToggled = false;
     const {disableCheckpoints, loop, children} = this.props;
     const nextDelta = this.currentDelta - deltaX;
+    // иногда не правильно расчитывается
     const maxShift = window.innerWidth - this.widthTotal - this.innerPadding;
 
     // Фикс на первый слайд
@@ -379,7 +380,7 @@ RCarousel.defaultProps = {
   prevNext:             false,
   stopPropagation:      false,
   loop:                 false,
-  onSlideChange:        () => {},
+  onSlideChange:        () => {}, // Нигде не используется
   onInit:               () => {},
   onSwiped:             () => {},
   onClick:              () => {},
