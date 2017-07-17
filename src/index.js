@@ -216,7 +216,15 @@ class RCarousel extends React.Component {
     const lastIndexDelta = (this.innerNode.offsetWidth - this.widthTotal - this.innerPadding) + gap;
     this.currentIndex = nextIndex;
 
-    if (loop) {
+    if (!loop && this.widthTotal + this.innerPadding < window.innerWidth) {
+      this.currentDelta = 0;
+    } else if (!loop && nextIndex === children.length - 1) {
+      this.isLastReached = true;
+      this.currentDelta = lastIndexDelta;
+    } else if (!loop && nextIndex === 0) {
+      this.currentDelta = 0;
+      this.isLastReached = false;
+    } else {
       const nextDelta = -this.itemWidths.slice(
         0,
         loop ? nextIndex + 1 : nextIndex
@@ -228,16 +236,7 @@ class RCarousel extends React.Component {
         this.isLastReached = false;
         this.currentDelta = nextDelta;
       }
-    } else
-      if (this.widthTotal + this.innerPadding < window.innerWidth) {
-        this.currentDelta = 0;
-      } else if (nextIndex === children.length - 1) {
-        this.isLastReached = true;
-        this.currentDelta = lastIndexDelta;
-      } else if (nextIndex === 0) {
-        this.currentDelta = 0;
-        this.isLastReached = false;
-      }
+    }
 
     this.setStylesWithPrefixes(
       this.innerNode,
