@@ -156,12 +156,6 @@ class RCarousel extends React.Component {
     return this.checkpoints.findIndex((checkpoint, i, checkpoints) =>
       Math.abs(delta) > checkpoint && Math.abs(delta) < checkpoints[i + 1]
     ) + (this.props.loop ? 0 : 1);
-    // const val = Math.abs(delta);
-    // for (let i = 0; i < this.checkpoints.length; i++) {
-    //   if (i === this.checkpoints.length - 1) return -1;
-    //   if (val > this.checkpoints[i] && val <= this.checkpoints[i + 1]) return i;
-    // }
-    // return -1;
   }
 
   handleTransitionEnd() {
