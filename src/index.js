@@ -89,8 +89,8 @@ class RCarousel extends React.Component {
       if (this.itemNodes[i]) {
         const itemWidth = this.itemNodes[i].offsetWidth + gap;
         this.itemWidths.push(itemWidth);
-        this.widthTotal += itemWidth;
         this.checkpoints.push((itemWidth / 2) + this.widthTotal);
+        this.widthTotal += itemWidth;
       }
     }
   }
@@ -153,12 +153,15 @@ class RCarousel extends React.Component {
   }
 
   findNextIndex(delta) {
-    const val = Math.abs(delta);
-    for (let i = 0; i < this.checkpoints.length; i++) {
-      if (i === this.checkpoints.length - 1) return -1;
-      if (val > this.checkpoints[i] && val <= this.checkpoints[i + 1]) return i;
-    }
-    return -1;
+    return this.checkpoints.findIndex((checkpoint, i, checkpoints) =>
+      Math.abs(delta) > checkpoint && Math.abs(delta) < checkpoints[i + 1]
+    ) + (this.props.loop ? 0 : 1);
+    // const val = Math.abs(delta);
+    // for (let i = 0; i < this.checkpoints.length; i++) {
+    //   if (i === this.checkpoints.length - 1) return -1;
+    //   if (val > this.checkpoints[i] && val <= this.checkpoints[i + 1]) return i;
+    // }
+    // return -1;
   }
 
   handleTransitionEnd() {
