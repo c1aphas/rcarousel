@@ -1,25 +1,40 @@
 import React from 'react';
 import ReactDom from 'react-dom';
-import RCarousel from '../src/index';
-import sliderStyles from './carouselStyles.scss';
+import injectTapEventPlugin from 'react-tap-event-plugin';
+import {
+  SimpleCarousel,
+  InfiniteCarousel,
+  TabCarousel,
+} from './components';
+import s from './styles.scss';
+
+injectTapEventPlugin();
 
 class App extends React.Component {
   render() {
     return (
-      <div style={{width: '80%', margin: 'auto'}}>
-        <RCarousel
-          classNames={sliderStyles}
-          prevNext
-          gap={30}
-        >
-          <img src="https://unsplash.it/600/400?random=1" alt="" />
-          <img src="https://unsplash.it/600/400?random=2" alt="" />
-          <img src="https://unsplash.it/600/400?random=3" alt="" />
-          <img src="https://unsplash.it/600/400?random=4" alt="" />
-          <img src="https://unsplash.it/600/400?random=5" alt="" />
-          <img src="https://unsplash.it/600/400?random=6" alt="" />
-        </RCarousel>
-      </div>
+      <section>
+        <div className={s.example}>
+          <h2 className={s.header}>
+            Simple carousel
+          </h2>
+          <div style={{width: '80%', margin: 'auto'}}>
+            <SimpleCarousel />
+          </div>
+        </div>
+        <div className={s.example}>
+          <h2 className={s.header}>
+            Infinite carousel
+          </h2>
+          <InfiniteCarousel />
+        </div>
+        <div className={s.example}>
+          <h2 className={s.header}>
+            Tab carousel
+          </h2>
+          <TabCarousel />
+        </div>
+      </section>
     );
   }
 }
