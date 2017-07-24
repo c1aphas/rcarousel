@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React from 'react';
 
 const DIRECTION_LEFT = 0;
 const DIRECTION_RIGHT = 1;
@@ -7,13 +7,20 @@ const DIRECTION_DOWN = 3;
 const IS_STRICT = true;
 
 export default function(WrappedComponent) {
-  return class Swipeable extends Component {
+  return class Swipeable extends React.Component {
+    constructor(props) {
+      super(props);
+      this.handleScroll = this.handleScroll.bind(this);
+      this.handleTouchStart = this.handleTouchStart.bind(this);
+      this.handleTouchMove = this.handleTouchMove.bind(this);
+      this.handleTouchEnd = this.handleTouchEnd.bind(this);
+    }
+
     initialX = 0
     initialY = 0
     delta = {x: 0, y: 0}
     prevDelta = {x: 0, y: 0}
     direction = -1
-    initialized = false
     shouldBlockScrollY = false
     shouldBlockScrollX = false
     isAndroid = navigator.userAgent.toLowerCase().indexOf('android') > -1;
@@ -45,15 +52,20 @@ export default function(WrappedComponent) {
       return !this.wci.props.isRelatedInnerSlider || !isSwippingInner;
     }
 
-    init(WrappedComponentInstance) {
-      if (!WrappedComponentInstance || this.initialized) return;
-      this.initialized = true;
-      this.wci = WrappedComponentInstance;
-      document.addEventListener('scroll', this.handleScroll.bind(this), false);
-      this.wci.innerNode.addEventListener('touchstart', this.handleTouchStart.bind(this), false);
-      this.wci.innerNode.addEventListener('touchmove', this.handleTouchMove.bind(this), false);
-      this.wci.innerNode.addEventListener('touchend', this.handleTouchEnd.bind(this), false);
-      this.wci.innerNode.addEventListener('touchcancel', this.handleTouchEnd.bind(this), false);
+    componentDidMount() {
+      document.addEventListener('scroll', this.handleScroll, false);
+      this.wci.innerNode.addEventListener('touchstart', this.handleTouchStart, false);
+      this.wci.innerNode.addEventListener('touchmove', this.handleTouchMove, false);
+      this.wci.innerNode.addEventListener('touchend', this.handleTouchEnd, false);
+      this.wci.innerNode.addEventListener('touchcancel', this.handleTouchEnd, false);
+    }
+
+    componentWillUnmount() {
+      document.removeEventListener('scroll', this.handleScroll);
+      this.wci.innerNode.removeEventListener('touchstart', this.handleTouchStart);
+      this.wci.innerNode.removeEventListener('touchmove', this.handleTouchMove);
+      this.wci.innerNode.removeEventListener('touchend', this.handleTouchEnd);
+      this.wci.innerNode.removeEventListener('touchcancel', this.handleTouchEnd);
     }
 
     handleTouchStart(e) {
@@ -147,9 +159,7 @@ export default function(WrappedComponent) {
     }
 
     render() {
-      // eslint-disable-next-line react/jsx-no-bind
-      const props = Object.assign({}, this.props, {ref: this.init.bind(this)});
-      return <WrappedComponent {...props} />;
+      return <WrappedComponent {...this.props} ref={node => this.wci = node} />;
     }
   };
 }
