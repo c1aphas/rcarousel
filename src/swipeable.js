@@ -23,6 +23,7 @@ export default function(WrappedComponent) {
     direction = -1
     shouldBlockScrollY = false
     shouldBlockScrollX = false
+    isAndroid = navigator.userAgent.toLowerCase().indexOf('android') > -1;
 
     getDirection(nextDelta) {
       const deltaX = Math.abs(nextDelta.x - this.prevDelta.x);
@@ -143,7 +144,9 @@ export default function(WrappedComponent) {
       if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
         e.stopPropagation();
       }
-      e.cancelable && e.preventDefault();
+      // http://ariatemplates.com/blog/2014/05/ghost-clicks-in-mobile-browsers/
+      this.isAndroid && e.cancelable && e.preventDefault();
+
       this.wci.swiped && this.wci.swiped(e, this.delta);
       if (this.direction === DIRECTION_LEFT) {
         this.wci.swipedLeft && this.wci.swipedLeft(e, this.delta);
