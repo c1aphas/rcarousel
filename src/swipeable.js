@@ -132,8 +132,10 @@ export default function(WrappedComponent) {
       if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
         e.stopPropagation();
       }
-      // http://ariatemplates.com/blog/2014/05/ghost-clicks-in-mobile-browsers/
-      this.isAndroid && e.cancelable && e.preventDefault();
+
+      if (e.cancelable && e.target.tagName !== 'A') {
+        e.preventDefault();
+      }
 
       this.wci.swiped && this.wci.swiped(e, this.delta);
       if (this.direction === DIRECTION_LEFT) {
@@ -141,6 +143,7 @@ export default function(WrappedComponent) {
       } else if (this.direction === DIRECTION_RIGHT) {
         this.wci.swipedRight && this.wci.swipedRight(e, this.delta);
       }
+
       this.shouldBlockScrollX = false;
       this.shouldBlockScrollY = false;
       this.prevDelta = {x: 0, y: 0};
