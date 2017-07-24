@@ -13,6 +13,11 @@ const distConfig = {
     filename:      'rcarousel.js',
     libraryTarget: 'umd',
   },
+  stats: {
+    children: false,
+    assets:   true,
+    modules: false
+  },
   module: {
     rules: [
       {
