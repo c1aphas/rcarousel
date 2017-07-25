@@ -34,9 +34,6 @@ const distConfig = {
             'react',
             'stage-2',
           ],
-          plugins: [
-            'transform-decorators-legacy',
-          ],
         },
       },
     ],
