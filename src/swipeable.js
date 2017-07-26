@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React from 'react';
 
 const DIRECTION_LEFT = 0;
 const DIRECTION_RIGHT = 1;
@@ -7,7 +7,7 @@ const DIRECTION_DOWN = 3;
 const IS_STRICT = true;
 
 export default function(WrappedComponent) {
-  return class Swipeable extends Component {
+  return class Swipeable extends React.PureComponent {
     initialX = 0
     initialY = 0
     delta = {x: 0, y: 0}
@@ -16,7 +16,6 @@ export default function(WrappedComponent) {
     initialized = false
     shouldBlockScrollY = false
     shouldBlockScrollX = false
-    isAndroid = navigator.userAgent.toLowerCase().indexOf('android') > -1;
 
     getDirection(nextDelta) {
       const deltaX = Math.abs(nextDelta.x - this.prevDelta.x);
@@ -133,20 +132,19 @@ export default function(WrappedComponent) {
         e.stopPropagation();
       }
 
-      if (e.cancelable && e.target.tagName !== 'A') {
-        e.preventDefault();
-      }
-
-      this.wci.swiped && this.wci.swiped(e, this.delta);
-      if (this.direction === DIRECTION_LEFT) {
-        this.wci.swipedLeft && this.wci.swipedLeft(e, this.delta);
-      } else if (this.direction === DIRECTION_RIGHT) {
-        this.wci.swipedRight && this.wci.swipedRight(e, this.delta);
+      if (this.delta.x !== 0) {
+        this.wci.swiped && this.wci.swiped(e, this.delta);
+        if (this.direction === DIRECTION_LEFT) {
+          this.wci.swipedLeft && this.wci.swipedLeft(e, this.delta);
+        } else if (this.direction === DIRECTION_RIGHT) {
+          this.wci.swipedRight && this.wci.swipedRight(e, this.delta);
+        }
       }
 
       this.shouldBlockScrollX = false;
       this.shouldBlockScrollY = false;
       this.prevDelta = {x: 0, y: 0};
+      this.setDelta({x: 0, y: 0});
     }
 
     render() {

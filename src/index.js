@@ -5,7 +5,6 @@ import _times from 'lodash/times';
 import _findIndex from 'lodash/findIndex';
 import swipeable from './swipeable';
 
-@swipeable
 class RCarousel extends React.Component {
   constructor(props) {
     super(props);
@@ -186,11 +185,11 @@ class RCarousel extends React.Component {
     this.goToSlide(idx + 4);
   }
 
-  handleItemClick(i) {
+  handleItemClick = (e) => {
+    const i = e.target.dataset.index;
     const {loop, onClick, children} = this.props;
     const clickedIndex = loop ? i % children.length : i;
-
-    onClick && onClick(clickedIndex, this.state);
+    onClick && onClick(clickedIndex, e);
   }
 
   togglePrevNext(index) {
@@ -255,23 +254,18 @@ class RCarousel extends React.Component {
   }
 
   renderItem(item, i) {
-    const {classNames, gap, isMobile} = this.props;
-    const additionalAttrs = {};
-    if (isMobile) {
-      additionalAttrs.onTouchTap = () => this.handleItemClick(i);
-    } else {
-      additionalAttrs.onClick = () => this.handleItemClick(i);
-    }
+    const {classNames, gap} = this.props;
     return (
       <div
         key={i}
+        data-index={i}
         className={cn(
           classNames.item,
           {[classNames.itemActive]: this.isItemActive(i)},
         )}
         ref={node => this.itemNodes[i] = node}
         style={{marginLeft: gap}}
-        {...additionalAttrs}
+        onClick={this.handleItemClick}
       >
         {item}
       </div>
@@ -386,12 +380,10 @@ RCarousel.defaultProps = {
   onClick:              () => {},
   currentIndex:         -1,
   disableCheckpoints:   false,
-  isMobile:             false,
   isRelatedInnerSlider: false,
 };
 
 RCarousel.propTypes = {
-  isMobile:           pt.bool,
   gap:                pt.number,
   transitionDuration: pt.number,
   classNames:         pt.shape({
@@ -419,4 +411,4 @@ RCarousel.propTypes = {
   currentIndex: pt.number,
 };
 
-export default RCarousel;
+export default swipeable(RCarousel);
