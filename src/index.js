@@ -258,7 +258,6 @@ class RCarousel extends React.Component {
     return (
       <div
         key={i}
-        data-slider-element
         data-index={i}
         className={cn(
           classNames.item,
@@ -357,7 +356,6 @@ class RCarousel extends React.Component {
 }
 
 RCarousel.defaultProps = {
-  jumpToClickedItem:  false,
   gap:                0,
   transitionDuration: 0.2,
   classNames:         {
@@ -386,7 +384,6 @@ RCarousel.defaultProps = {
 };
 
 RCarousel.propTypes = {
-  jumpToClickedItem:  pt.bool,
   gap:                pt.number,
   transitionDuration: pt.number,
   classNames:         pt.shape({

@@ -67,8 +67,6 @@ export default function(WrappedComponent) {
       this.initialY = e.touches[0].clientY;
 
       this.wci.swipeStart && this.wci.swipeStart(e);
-
-      this.touchStartTimestamp = +(new Date());
     }
 
     setDelta(nextDelta) {
@@ -135,11 +133,8 @@ export default function(WrappedComponent) {
       if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
         e.stopPropagation();
       }
-      const touchDuration = +(new Date()) - this.touchStartTimestamp;
-      const isTouching = touchDuration > this.tapAwaitThreshold;
+
       if (this.delta.x !== 0) {
-        // this.wci.touchTap && this.wci.touchTap(e);
-      // } else {
         this.wci.swiped && this.wci.swiped(e, this.delta);
         if (this.direction === DIRECTION_LEFT) {
           this.wci.swipedLeft && this.wci.swipedLeft(e, this.delta);
