@@ -16,8 +16,6 @@ export default function(WrappedComponent) {
     initialized = false
     shouldBlockScrollY = false
     shouldBlockScrollX = false
-    tapAwaitThreshold = 20
-    isAndroid = navigator.userAgent.toLowerCase().indexOf('android') > -1;
 
     getDirection(nextDelta) {
       const deltaX = Math.abs(nextDelta.x - this.prevDelta.x);
