@@ -13,8 +13,10 @@ export default function(WrappedComponent) {
     delta = {x: 0, y: 0}
     prevDelta = {x: 0, y: 0}
     direction = -1
+    initialized = false
     shouldBlockScrollY = false
     shouldBlockScrollX = false
+    isMoving = false
 
     getDirection(nextDelta) {
       const deltaX = Math.abs(nextDelta.x - this.prevDelta.x);
@@ -43,43 +45,28 @@ export default function(WrappedComponent) {
       return !this.wci.props.isRelatedInnerSlider || !isSwippingInner;
     }
 
-    // https://github.com/timruffles/ios-html5-drag-drop-shim/issues/77
-    setIosHack() {
-      if (!window.iosPreventDefaultScroll) {
-        window.addEventListener('touchmove', () => {});
-        window.iosPreventDefaultScroll = 1;
-      }
+    init(WrappedComponentInstance) {
+      if (!WrappedComponentInstance || this.initialized) return;
+      this.initialized = true;
+      this.wci = WrappedComponentInstance;
+      document.addEventListener('scroll', this.handleScroll.bind(this), false);
+      this.wci.innerNode.addEventListener('touchstart', this.handleTouchStart.bind(this), false);
+      this.wci.innerNode.addEventListener('touchmove', this.handleTouchMove.bind(this), false);
+      this.wci.innerNode.addEventListener('touchend', this.handleTouchEnd.bind(this), false);
+      this.wci.innerNode.addEventListener('touchcancel', this.handleTouchEnd.bind(this), false);
     }
 
-    componentDidMount() {
-      this.wci.innerNode.addEventListener('touchstart', this.handleTouchStart, false);
-      this.wci.innerNode.addEventListener('touchmove', this.handleTouchMove, false);
-      this.wci.innerNode.addEventListener('touchend', this.handleTouchEnd, false);
-      this.wci.innerNode.addEventListener('touchcancel', this.handleTouchEnd, false);
-      this.setIosHack();
-    }
-
-    componentWillUnmount() {
-      this.wci.innerNode.removeEventListener('touchstart', this.handleTouchStart);
-      this.wci.innerNode.removeEventListener('touchmove', this.handleTouchMove);
-      this.wci.innerNode.removeEventListener('touchend', this.handleTouchEnd);
-      this.wci.innerNode.removeEventListener('touchcancel', this.handleTouchEnd);
-    }
-
-    handleTouchStart = (e) => {
+    handleTouchStart(e) {
       this.shouldBlockScrollX = false;
       this.shouldBlockScrollY = false;
       if (this.isStopPropagationAllowed() && this.wci.props.stopPropagation) {
         e.stopPropagation();
       }
-      if (e.targetTouches.length) {
-        this.initialX = e.targetTouches[0].clientX;
-        this.initialY = e.targetTouches[0].clientY;
-        this.wci.swipeStart && this.wci.swipeStart(e);
-      }
-      if (this.shouldBlockScrollY) {
-        e.preventDefault();
-      }
+      this.initialX = e.touches[0].clientX;
+      this.initialY = e.touches[0].clientY;
+      this.isMoving = false;
+
+      this.wci.swipeStart && this.wci.swipeStart(e);
     }
 
     setDelta(nextDelta) {
@@ -87,42 +74,49 @@ export default function(WrappedComponent) {
       this.delta = nextDelta;
     }
 
-    handleTouchMove = (e) => {
+    handleScroll() {
+      if (!this.shouldBlockScrollY) {
+        this.shouldBlockScrollX = true;
+      }
+    }
+
+    handleTouchMove(e) {
       if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
         e.stopPropagation();
       }
-      if (!e.targetTouches.length) {
-        return;
-      }
       const nextDelta = {
-        x: this.initialX - e.targetTouches[0].clientX,
-        y: this.initialY - e.targetTouches[0].clientY,
+        x: this.initialX - e.touches[0].clientX,
+        y: this.initialY - e.touches[0].clientY,
       };
       this.getDirection(nextDelta);
       switch (this.direction) {
         case DIRECTION_LEFT:
           if (!this.shouldBlockScrollX) {
             this.shouldBlockScrollY = true;
+            this.setDelta(nextDelta);
             if (this.wci.swipingLeft && this.isStopPropagationAllowed(IS_STRICT)) {
-              this.wci.swipingLeft(e, this.delta);
+             this.wci.swipingLeft(e, this.delta);
             }
           }
           break;
         case DIRECTION_RIGHT:
           if (!this.shouldBlockScrollX) {
             this.shouldBlockScrollY = true;
+            this.setDelta(nextDelta);
             if (this.wci.swipingRight && this.isStopPropagationAllowed(IS_STRICT)) {
               this.wci.swipingRight(e, this.delta);
             }
           }
           break;
         case DIRECTION_UP:
+          this.setDelta(nextDelta);
           if (!this.shouldBlockScrollY) {
             this.shouldBlockScrollX = true;
           }
           this.wci.swipingUp && this.wci.swipingUp(e, this.delta);
           break;
         case DIRECTION_DOWN:
+          this.setDelta(nextDelta);
           if (!this.shouldBlockScrollY) {
             this.shouldBlockScrollX = true;
           }
@@ -130,37 +124,34 @@ export default function(WrappedComponent) {
           break;
         default:
       }
+      this.isMoving = true;
       this.wci.swiping && this.wci.swiping(e, this.delta);
-      this.setDelta(nextDelta);
 
       this.shouldBlockScrollY && e.preventDefault();
     }
 
-    handleTouchEnd = (e) => {
+    handleTouchEnd(e) {
       if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
         e.stopPropagation();
       }
-
-      this.delta = {
-        x: this.shouldBlockScrollX ? 0 : this.delta.x,
-        y: this.shouldBlockScrollY ? 0 : this.delta.y,
-      };
-
       if (this.delta.x !== 0) {
         this.wci.swiped && this.wci.swiped(e, this.delta);
-      }
-
-      this.shouldBlockScrollX = false;
-      this.shouldBlockScrollY = false;
-      this.setDelta({x: 0, y: 0});
-      this.prevDelta = {x: 0, y: 0};
-      if (this.shouldBlockScrollY) {
-        e.preventDefault();
+        if (this.direction === DIRECTION_LEFT) {
+          this.wci.swipedLeft && this.wci.swipedLeft(e, this.delta);
+        } else if (this.direction === DIRECTION_RIGHT) {
+          this.wci.swipedRight && this.wci.swipedRight(e, this.delta);
+        }
+        this.shouldBlockScrollX = false;
+        this.shouldBlockScrollY = false;
+        this.prevDelta = {x: 0, y: 0};
+        this.isMoving = false;
       }
     }
 
     render() {
-      return <WrappedComponent {...this.props} ref={node => this.wci = node} />;
+      // eslint-disable-next-line react/jsx-no-bind
+      const props = Object.assign({}, this.props, {ref: this.init.bind(this)});
+      return <WrappedComponent {...props} />;
     }
   };
 }
