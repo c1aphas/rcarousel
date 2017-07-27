@@ -48,10 +48,10 @@ class RCarousel extends React.Component {
     }
   }
 
-  async componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps) {
     const {children, currentIndex, loop, onInit} = this.props;
     if (children.length !== prevProps.children.length) {
-      await this.calcCheckpoints();
+      this.calcCheckpoints();
       this.goToSlide(currentIndex, true);
     }
 
