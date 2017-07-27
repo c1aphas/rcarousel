@@ -94,7 +94,7 @@ class RCarousel extends React.Component {
 
           this.itemWidths.push(itemWidth);
           this.widthTotal += itemWidth;
-          itemNode && this.checkpoints.push(
+          this.checkpoints.push(
             ((itemNode.offsetWidth + gap) / 2) + ((itemNode.offsetWidth + gap) * i)
           );
         }
