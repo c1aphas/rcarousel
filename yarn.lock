@@ -3965,7 +3965,7 @@ promise@^7.1.1:
   dependencies:
     asap "~2.0.3"
 
-prop-types@^15.5.10:
+prop-types@^15.5.10, prop-types@^15.5.8:
   version "15.5.10"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.5.10.tgz#2797dfc3126182e3a95e3dfbb2e893ddd7456154"
   dependencies:
@@ -4070,6 +4070,12 @@ react-dom@^15.6.1:
     loose-envify "^1.1.0"
     object-assign "^4.1.0"
     prop-types "^15.5.10"
+
+react-resize-detector@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/react-resize-detector/-/react-resize-detector-0.5.0.tgz#e1eaaba654c08008dc22dc70c75ab6d3f2e82624"
+  dependencies:
+    prop-types "^15.5.8"
 
 react-tap-event-plugin@^2.0.1:
   version "2.0.1"
