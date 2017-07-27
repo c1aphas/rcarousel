@@ -48,10 +48,10 @@ class RCarousel extends React.Component {
     }
   }
 
-  async componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps) {
     const {children, currentIndex, loop, onInit} = this.props;
     if (children.length !== prevProps.children.length) {
-      await this.calcCheckpoints();
+      this.calcCheckpoints();
       this.goToSlide(currentIndex, true);
     }
 
@@ -88,14 +88,16 @@ class RCarousel extends React.Component {
             ? i % children.length
             : i
         ];
-        const itemWidth = itemNode.offsetWidth + gap;
-        this.itemWidth = itemWidth;
+        if (itemNode) {
+          const itemWidth = itemNode.offsetWidth + gap;
+          this.itemWidth = itemWidth;
 
-        this.itemWidths.push(itemWidth);
-        this.widthTotal += itemWidth;
-        itemNode && this.checkpoints.push(
-          ((itemNode.offsetWidth + gap) / 2) + ((itemNode.offsetWidth + gap) * i)
-        );
+          this.itemWidths.push(itemWidth);
+          this.widthTotal += itemWidth;
+          this.checkpoints.push(
+            ((itemNode.offsetWidth + gap) / 2) + ((itemNode.offsetWidth + gap) * i)
+          );
+        }
       }
     );
   }
