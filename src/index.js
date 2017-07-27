@@ -69,8 +69,10 @@ class RCarousel extends React.Component {
   }
 
   handleViewportResize() {
-    this.calcCheckpoints();
-    this.goToSlide(this.state.currentIndex, true);
+    if (this.innedNode) {
+      this.calcCheckpoints();
+      this.goToSlide(this.state.currentIndex, true);
+    }
   }
 
   calcCheckpoints() {
@@ -211,6 +213,7 @@ class RCarousel extends React.Component {
   }
 
   goToSlide(nextIndex, withoutAnimation) {
+    if (!this.innerNode) return;
     const {transitionDuration, loop, gap, children} = this.props;
     const lastIndexDelta = (this.innerNode.offsetWidth - this.widthTotal - this.innerPadding) + gap;
     this.currentIndex = nextIndex;

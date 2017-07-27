@@ -135,7 +135,7 @@ var RCarousel = function (_React$Component) {
   }, {
     key: 'setStylesWithPrefixes',
     value: function setStylesWithPrefixes(node, delta) {
-      var duration = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.2;
+      var duration = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.3;
 
       requestAnimationFrame(function () {
         Object.assign(node.style, {
@@ -148,8 +148,10 @@ var RCarousel = function (_React$Component) {
   }, {
     key: 'handleViewportResize',
     value: function handleViewportResize() {
-      this.calcCheckpoints();
-      this.goToSlide(this.state.currentIndex, true);
+      if (this.innedNode) {
+        this.calcCheckpoints();
+        this.goToSlide(this.state.currentIndex, true);
+      }
     }
   }, {
     key: 'calcCheckpoints',
@@ -168,12 +170,14 @@ var RCarousel = function (_React$Component) {
 
       (0, _times3.default)(loop ? children.length * 3 : children.length, function (i) {
         var itemNode = _this2.itemNodes[loop ? i % children.length : i];
-        var itemWidth = itemNode.offsetWidth + gap;
-        _this2.itemWidth = itemWidth;
+        if (itemNode) {
+          var itemWidth = itemNode.offsetWidth + gap;
+          _this2.itemWidth = itemWidth;
 
-        _this2.itemWidths.push(itemWidth);
-        _this2.widthTotal += itemWidth;
-        itemNode && _this2.checkpoints.push((itemNode.offsetWidth + gap) / 2 + (itemNode.offsetWidth + gap) * i);
+          _this2.itemWidths.push(itemWidth);
+          _this2.widthTotal += itemWidth;
+          _this2.checkpoints.push((itemNode.offsetWidth + gap) / 2 + (itemNode.offsetWidth + gap) * i);
+        }
       });
     }
   }, {
@@ -198,7 +202,8 @@ var RCarousel = function (_React$Component) {
       var _props4 = this.props,
           disableCheckpoints = _props4.disableCheckpoints,
           loop = _props4.loop,
-          children = _props4.children;
+          children = _props4.children,
+          onSwiped = _props4.onSwiped;
 
       var nextDelta = this.currentDelta - deltaX;
       // иногда не правильно расчитывается
@@ -236,6 +241,7 @@ var RCarousel = function (_React$Component) {
             this.isToggled = nextIndex !== this.state.currentIndex;
             this.goToSlide(nextIndex);
           }
+      onSwiped && onSwiped(this.currentIndex);
     }
   }, {
     key: 'handleTransitionEnd',
@@ -259,7 +265,6 @@ var RCarousel = function (_React$Component) {
           this.goToSlide(min - 1, true);
         }
       }
-      onSwiped && onSwiped(this.currentIndex);
     }
   }, {
     key: 'handlePaginationClick',
@@ -293,6 +298,7 @@ var RCarousel = function (_React$Component) {
   }, {
     key: 'goToSlide',
     value: function goToSlide(nextIndex, withoutAnimation) {
+      if (!this.innerNode) return;
       var _props6 = this.props,
           transitionDuration = _props6.transitionDuration,
           loop = _props6.loop,
