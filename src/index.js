@@ -58,7 +58,7 @@ class RCarousel extends React.Component {
     loop && onInit && onInit(); // здесь странно вызывать onInit();
   }
 
-  setStylesWithPrefixes(node, delta, duration = 0.2) {
+  setStylesWithPrefixes(node, delta, duration = 0.3) {
     requestAnimationFrame(() => {
       Object.assign(node.style, {
         transform:          `translate3d(${delta}px, 0, 0)`,
@@ -123,7 +123,7 @@ class RCarousel extends React.Component {
   swiped(e, {x: deltaX}) {
     this.isSwiped = true;
     this.isToggled = false;
-    const {disableCheckpoints, loop, children} = this.props;
+    const {disableCheckpoints, loop, children, onSwiped} = this.props;
     const nextDelta = this.currentDelta - deltaX;
     // иногда не правильно расчитывается
     const maxShift = window.innerWidth - this.widthTotal - this.innerPadding;
@@ -160,6 +160,7 @@ class RCarousel extends React.Component {
       this.isToggled = nextIndex !== this.state.currentIndex;
       this.goToSlide(nextIndex);
     }
+    onSwiped && onSwiped(this.currentIndex);
   }
 
   handleTransitionEnd() {
@@ -178,7 +179,6 @@ class RCarousel extends React.Component {
         this.goToSlide(min - 1, true);
       }
     }
-    onSwiped && onSwiped(this.currentIndex);
   }
 
   handlePaginationClick(e) {
