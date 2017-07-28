@@ -96,11 +96,11 @@ exports.default = function (WrappedComponent) {
           y: this.initialY - e.touches[0].clientY
         };
         this.getDirection(nextDelta);
+        this.setDelta(nextDelta);
         switch (this.direction) {
           case DIRECTION_LEFT:
             if (!this.shouldBlockScrollX) {
               this.shouldBlockScrollY = true;
-              this.setDelta(nextDelta);
               if (this.wci.swipingLeft && this.isStopPropagationAllowed(IS_STRICT)) {
                 this.wci.swipingLeft(e, this.delta);
               }
@@ -109,21 +109,18 @@ exports.default = function (WrappedComponent) {
           case DIRECTION_RIGHT:
             if (!this.shouldBlockScrollX) {
               this.shouldBlockScrollY = true;
-              this.setDelta(nextDelta);
               if (this.wci.swipingRight && this.isStopPropagationAllowed(IS_STRICT)) {
                 this.wci.swipingRight(e, this.delta);
               }
             }
             break;
           case DIRECTION_UP:
-            this.setDelta(nextDelta);
             if (!this.shouldBlockScrollY) {
               this.shouldBlockScrollX = true;
             }
             this.wci.swipingUp && this.wci.swipingUp(e, this.delta);
             break;
           case DIRECTION_DOWN:
-            this.setDelta(nextDelta);
             if (!this.shouldBlockScrollY) {
               this.shouldBlockScrollX = true;
             }
@@ -154,7 +151,6 @@ exports.default = function (WrappedComponent) {
         this.shouldBlockScrollX = false;
         this.shouldBlockScrollY = false;
         this.prevDelta = { x: 0, y: 0 };
-        this.setDelta({ x: 0, y: 0 });
       }
     }, {
       key: 'render',
