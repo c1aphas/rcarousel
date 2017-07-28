@@ -128,6 +128,7 @@ class RCarousel extends React.Component {
   }
 
   swiped(e, {x: deltaX}) {
+    if (this.innerNode === null) return;
     this.isSwiped = true;
     this.isToggled = false;
     const {disableCheckpoints, loop, children} = this.props;
@@ -155,11 +156,8 @@ class RCarousel extends React.Component {
       this.currentDelta = nextDelta;
       this.setStylesWithPrefixes(this.innerNode, this.currentDelta, 0);
     } else {
-        // Фикс на ближайший слайд
-
-      const nextIndex = _findIndex(this.checkpoints, (checkpoint, i) =>
-           Math.abs(nextDelta) > checkpoint && Math.abs(nextDelta) < this.checkpoints[i + 1]
-      );
+      // Фикс на ближайший слайд
+      const nextIndex = this.findSlideIndex(nextDelta);
       this.isToggled = nextIndex !== this.state.currentIndex;
       this.goToSlide(nextIndex);
     }
@@ -173,7 +171,12 @@ class RCarousel extends React.Component {
     if (absDelta > this.checkpoints[this.checkpoints.length - 1]) {
       return this.checkpoints.length;
     }
-
+    for (let i = 0; i < this.checkpoints.length - 1; i++) {
+      if (absDelta > this.checkpoints[i] && absDelta < this.checkpoints[i + 1]) {
+        return i + 1;
+      }
+    }
+    return -1;
   }
 
   handleTransitionEnd() {
@@ -262,14 +265,12 @@ class RCarousel extends React.Component {
 
   goToSlide(nextIndex, withoutAnimation) {
     console.log('GO TO', nextIndex);
-    if (nextIndex < 0 || nextIndex >= this.itemWidths.length) return;
+    if (nextIndex < 0 || nextIndex >= this.itemWidths.length || this.innerNode === null) return;
     const {transitionDuration, loop, gap, children} = this.props;
     const lastIndexDelta = (this.innerNode.offsetWidth - this.widthTotal - this.innerPadding) + gap;
 
-
-
     let nextDelta = 0;
-    for (let i = 0; i <= nextIndex; i++) {
+    for (let i = 0; i < nextIndex; i++) {
       nextDelta += this.itemWidths[i];
     }
 
@@ -288,8 +289,6 @@ class RCarousel extends React.Component {
       realIndex:    (nextIndex + 1) % children.length,
     });
   }
-
-
 
   isItemActive(i) {
     const {loop} = this.props;
