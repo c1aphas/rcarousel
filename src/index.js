@@ -166,7 +166,7 @@ class RCarousel extends React.Component {
   }
 
   handleTransitionEnd() {
-    const {onSwiped, loop, children} = this.props;
+    const {loop, children} = this.props;
     if (!this.isToggled || !this.isSwiped) {
       return false;
     }

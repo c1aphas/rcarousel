@@ -161,3 +161,5 @@ rules:
   # Внимание! Правила вызывают падение линтера! Включать на свой страх и риск!
   babel/generator-star-spacing: 0
   generator-star-spacing: 0
+
+  jsx-a11y/no-static-element-interactions: 0
