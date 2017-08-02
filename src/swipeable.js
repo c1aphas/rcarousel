@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React from 'react';
 
 const DIRECTION_LEFT = 0;
 const DIRECTION_RIGHT = 1;
@@ -7,7 +7,7 @@ const DIRECTION_DOWN = 3;
 const IS_STRICT = true;
 
 export default function(WrappedComponent) {
-  return class Swipeable extends Component {
+  return class Swipeable extends React.PureComponent {
     initialX = 0
     initialY = 0
     delta = {x: 0, y: 0}
@@ -134,19 +134,18 @@ export default function(WrappedComponent) {
       if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
         e.stopPropagation();
       }
-      if (this.isMoving) {
-        e.cancelable && e.preventDefault();
+      if (this.delta.x !== 0) {
         this.wci.swiped && this.wci.swiped(e, this.delta);
         if (this.direction === DIRECTION_LEFT) {
           this.wci.swipedLeft && this.wci.swipedLeft(e, this.delta);
         } else if (this.direction === DIRECTION_RIGHT) {
           this.wci.swipedRight && this.wci.swipedRight(e, this.delta);
         }
+        this.shouldBlockScrollX = false;
+        this.shouldBlockScrollY = false;
+        this.prevDelta = {x: 0, y: 0};
+        this.isMoving = false;
       }
-      this.shouldBlockScrollX = false;
-      this.shouldBlockScrollY = false;
-      this.prevDelta = {x: 0, y: 0};
-      this.isMoving = false;
     }
 
     render() {
