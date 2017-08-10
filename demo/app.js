@@ -4,7 +4,6 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 import {
   SimpleCarousel,
   InfiniteCarousel,
-  InfiniteCarouselImages,
   TabCarousel,
 } from './components';
 import s from './styles.scss';
@@ -19,7 +18,7 @@ class App extends React.Component {
           <h2 className={s.header}>
             Simple carousel
           </h2>
-          <div style={{width: '25%', margin: 'auto'}}>
+          <div style={{width: '75%', margin: 'auto'}}>
             <SimpleCarousel />
           </div>
         </div>
@@ -28,19 +27,16 @@ class App extends React.Component {
             Infinite carousel
           </h2>
           <InfiniteCarousel />
-          {/*<InfiniteCarouselImages />*/}
         </div>
-        {/*<div className={s.example}>*/}
-          {/*<h2 className={s.header}>*/}
-            {/*Tab carousel*/}
-          {/*</h2>*/}
-          {/*<TabCarousel />*/}
-        {/*</div>*/}
+        <div className={s.example}>
+          <h2 className={s.header}>
+            Tab carousel
+          </h2>
+          <TabCarousel />
+        </div>
       </section>
     );
   }
 }
 
-const content = document.getElementById('content');
-
-ReactDom.render(<App />, content);
+ReactDom.render(<App />, document.getElementById('content'));
