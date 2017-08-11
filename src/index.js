@@ -162,7 +162,7 @@ class RCarousel extends React.Component {
       this.isToggled = nextIndex !== this.state.currentIndex;
       this.goToSlide(nextIndex);
     }
-    onSwiped && onSwiped(this.currentIndex);
+    onSwiped && onSwiped(this.state.realIndex);
   }
 
   handleTransitionEnd() {
