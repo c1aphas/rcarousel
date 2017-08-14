@@ -25,7 +25,7 @@ class RCarousel extends React.Component {
   }
 
   componentDidMount() {
-    const {onInit, loop, disableCheckpoints, currentIndex} = this.props;
+    const {onInit, loop, currentIndex} = this.props;
 
     this.innerPadding =
       parseInt(getComputedStyle(this.innerNode).getPropertyValue('padding-left'), 10) +
@@ -33,22 +33,16 @@ class RCarousel extends React.Component {
     window.addEventListener('orientationchange', this.handleViewportResize);
     window.addEventListener('resize', this.handleViewportResize);
 
-    this.itemWidths = this.getItemWidths();
-    this.childrenWidth = this.getChildrenWidth(this.itemWidths);
-    this.widthTotal = this.childrenWidth * this.state.rend;
-    if (!disableCheckpoints) {
-      this.checkpoints = this.getCheckpoints(this.itemWidths);
-    }
+    this.calcBasicValues();
     if (loop) {
-      const repeatsOnScreen = this.getRepeatOnScreen(this.childrenWidth);
-      this.itemsOnScreen = repeatsOnScreen * this.props.children.length;
-      this.setState({rend: repeatsOnScreen * SCREEN_FACTOR});
+      this.setState({rend: this.repeatsOnScreen * SCREEN_FACTOR});
+      this.goToSlide(this.itemsOnScreen + currentIndex, true);
+    } else {
+      this.goToSlide(currentIndex, true);
     }
 
     this.setState({rendered: true});
-    this.goToSlide(loop ? this.itemsOnScreen + currentIndex : currentIndex, true);
-
-    !loop && onInit && onInit();
+    onInit && onInit();
   }
 
   componentWillUpdate(nextProps) {
@@ -58,14 +52,9 @@ class RCarousel extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const {children, currentIndex, loop, onInit, disableCheckpoints} = this.props;
+    const {children, currentIndex, loop, onInit} = this.props;
     if (children.length !== prevProps.children.length || this.state.rend !== prevState.rend) {
-      this.itemWidths = this.getItemWidths();
-      this.childrenWidth = this.getChildrenWidth(this.itemWidths);
-      if (!disableCheckpoints) {
-        this.checkpoints = this.getCheckpoints(this.itemWidths);
-      }
-      this.widthTotal = this.childrenWidth * this.state.rend;
+      this.calcBasicValues();
       this.goToSlide(loop ? this.itemsOnScreen + currentIndex : currentIndex, true);
     }
 
@@ -112,28 +101,30 @@ class RCarousel extends React.Component {
     let sum = 0;
     const checkpoints = [];
     for (let i = 0; i < itemWidths.length * this.state.rend; i++) {
-      checkpoints.push({
-        val:    (itemWidths[i % itemWidths.length] / 2) + sum,
-        offset: -sum,
-      });
+      checkpoints.push((itemWidths[i % itemWidths.length] / 2) + sum);
       sum += itemWidths[i % itemWidths.length];
     }
     return checkpoints;
   }
 
-  handleViewportResize() {
-    const {loop, disableCheckpoints} = this.props;
+  calcBasicValues() {
     this.itemWidths = this.getItemWidths();
     this.childrenWidth = this.getChildrenWidth(this.itemWidths);
-    if (!disableCheckpoints) {
+    this.widthTotal = this.childrenWidth * this.state.rend;
+    if (!this.props.disableCheckpoints) {
       this.checkpoints = this.getCheckpoints(this.itemWidths);
     }
-    if (loop) {
-      const repeatsOnScreen = this.getRepeatOnScreen(this.childrenWidth);
-      this.itemsOnScreen = repeatsOnScreen * this.props.children.length;
-      this.setState({rend: repeatsOnScreen * SCREEN_FACTOR});
+    if (this.props.loop) {
+      this.repeatsOnScreen = this.getRepeatOnScreen(this.childrenWidth);
+      this.itemsOnScreen = this.repeatsOnScreen * this.props.children.length;
     }
-    this.widthTotal = this.childrenWidth * this.state.rend;
+  }
+
+  handleViewportResize() {
+    this.calcBasicValues();
+    if (this.props.loop) {
+      this.setState({rend: this.repeatsOnScreen * SCREEN_FACTOR});
+    }
     this.goToSlide(this.state.currentIndex, true);
   }
 
@@ -158,7 +149,6 @@ class RCarousel extends React.Component {
   }
 
   swiped(e, {x: deltaX}) {
-    if (this.innerNode === null) return;
     this.isToggled = false;
     const {disableCheckpoints, gap, onSwiped, transitionDuration} = this.props;
     const nextDelta = this.currentDelta - deltaX;
@@ -183,14 +173,14 @@ class RCarousel extends React.Component {
 
   findSlideIndex(delta) {
     const absDelta = Math.abs(delta);
-    if (delta > 0 || absDelta < this.checkpoints[0].val) {
+    if (delta > 0 || absDelta < this.checkpoints[0]) {
       return 0;
     }
-    if (absDelta > this.checkpoints[this.checkpoints.length - 1].val) {
+    if (absDelta > this.checkpoints[this.checkpoints.length - 1]) {
       return this.checkpoints.length - 1;
     }
     for (let i = 0; i < this.checkpoints.length - 1; i++) {
-      if (absDelta >= this.checkpoints[i].val && absDelta < this.checkpoints[i + 1].val) {
+      if (absDelta >= this.checkpoints[i] && absDelta < this.checkpoints[i + 1]) {
         return i + 1;
       }
     }
@@ -221,7 +211,11 @@ class RCarousel extends React.Component {
 
     const {transitionDuration, loop, gap, children} = this.props;
     const lastIndexDelta = (this.innerNode.offsetWidth - this.widthTotal - this.innerPadding) + gap;
-    const nextDelta = this.checkpoints.length ? this.checkpoints[nextIndex].offset : 0;
+
+    let nextDelta = 0;
+    for (let i = 0; i < nextIndex; i++) {
+      nextDelta -= this.itemWidths[i % children.length];
+    }
 
     if (!loop && nextDelta <= lastIndexDelta) {  // фикс для последнего слайда
       this.currentDelta = Math.min(lastIndexDelta, 0);

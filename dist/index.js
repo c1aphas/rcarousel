@@ -86,7 +86,6 @@ var RCarousel = function (_React$Component) {
       var _props = this.props,
           onInit = _props.onInit,
           loop = _props.loop,
-          disableCheckpoints = _props.disableCheckpoints,
           currentIndex = _props.currentIndex;
 
 
@@ -94,22 +93,16 @@ var RCarousel = function (_React$Component) {
       window.addEventListener('orientationchange', this.handleViewportResize);
       window.addEventListener('resize', this.handleViewportResize);
 
-      this.itemWidths = this.getItemWidths();
-      this.childrenWidth = this.getChildrenWidth(this.itemWidths);
-      this.widthTotal = this.childrenWidth * this.state.rend;
-      if (!disableCheckpoints) {
-        this.checkpoints = this.getCheckpoints(this.itemWidths);
-      }
+      this.calcBasicValues();
       if (loop) {
-        var repeatsOnScreen = this.getRepeatOnScreen(this.childrenWidth);
-        this.itemsOnScreen = repeatsOnScreen * this.props.children.length;
-        this.setState({ rend: repeatsOnScreen * SCREEN_FACTOR });
+        this.setState({ rend: this.repeatsOnScreen * SCREEN_FACTOR });
+        this.goToSlide(this.itemsOnScreen + currentIndex, true);
+      } else {
+        this.goToSlide(currentIndex, true);
       }
 
       this.setState({ rendered: true });
-      this.goToSlide(loop ? this.itemsOnScreen + currentIndex : currentIndex, true);
-
-      !loop && onInit && onInit();
+      onInit && onInit();
     }
   }, {
     key: 'componentWillUpdate',
@@ -125,16 +118,10 @@ var RCarousel = function (_React$Component) {
           children = _props2.children,
           currentIndex = _props2.currentIndex,
           loop = _props2.loop,
-          onInit = _props2.onInit,
-          disableCheckpoints = _props2.disableCheckpoints;
+          onInit = _props2.onInit;
 
       if (children.length !== prevProps.children.length || this.state.rend !== prevState.rend) {
-        this.itemWidths = this.getItemWidths();
-        this.childrenWidth = this.getChildrenWidth(this.itemWidths);
-        if (!disableCheckpoints) {
-          this.checkpoints = this.getCheckpoints(this.itemWidths);
-        }
-        this.widthTotal = this.childrenWidth * this.state.rend;
+        this.calcBasicValues();
         this.goToSlide(loop ? this.itemsOnScreen + currentIndex : currentIndex, true);
       }
 
@@ -189,32 +176,32 @@ var RCarousel = function (_React$Component) {
       var sum = 0;
       var checkpoints = [];
       for (var i = 0; i < itemWidths.length * this.state.rend; i++) {
-        checkpoints.push({
-          val: itemWidths[i % itemWidths.length] / 2 + sum,
-          offset: -sum
-        });
+        checkpoints.push(itemWidths[i % itemWidths.length] / 2 + sum);
         sum += itemWidths[i % itemWidths.length];
       }
       return checkpoints;
     }
   }, {
-    key: 'handleViewportResize',
-    value: function handleViewportResize() {
-      var _props3 = this.props,
-          loop = _props3.loop,
-          disableCheckpoints = _props3.disableCheckpoints;
-
+    key: 'calcBasicValues',
+    value: function calcBasicValues() {
       this.itemWidths = this.getItemWidths();
       this.childrenWidth = this.getChildrenWidth(this.itemWidths);
-      if (!disableCheckpoints) {
+      this.widthTotal = this.childrenWidth * this.state.rend;
+      if (!this.props.disableCheckpoints) {
         this.checkpoints = this.getCheckpoints(this.itemWidths);
       }
-      if (loop) {
-        var repeatsOnScreen = this.getRepeatOnScreen(this.childrenWidth);
-        this.itemsOnScreen = repeatsOnScreen * this.props.children.length;
-        this.setState({ rend: repeatsOnScreen * SCREEN_FACTOR });
+      if (this.props.loop) {
+        this.repeatsOnScreen = this.getRepeatOnScreen(this.childrenWidth);
+        this.itemsOnScreen = this.repeatsOnScreen * this.props.children.length;
       }
-      this.widthTotal = this.childrenWidth * this.state.rend;
+    }
+  }, {
+    key: 'handleViewportResize',
+    value: function handleViewportResize() {
+      this.calcBasicValues();
+      if (this.props.loop) {
+        this.setState({ rend: this.repeatsOnScreen * SCREEN_FACTOR });
+      }
       this.goToSlide(this.state.currentIndex, true);
     }
   }, {
@@ -234,13 +221,12 @@ var RCarousel = function (_React$Component) {
     value: function swiped(e, _ref) {
       var deltaX = _ref.x;
 
-      if (this.innerNode === null) return;
       this.isToggled = false;
-      var _props4 = this.props,
-          disableCheckpoints = _props4.disableCheckpoints,
-          gap = _props4.gap,
-          onSwiped = _props4.onSwiped,
-          transitionDuration = _props4.transitionDuration;
+      var _props3 = this.props,
+          disableCheckpoints = _props3.disableCheckpoints,
+          gap = _props3.gap,
+          onSwiped = _props3.onSwiped,
+          transitionDuration = _props3.transitionDuration;
 
       var nextDelta = this.currentDelta - deltaX;
       var lastIndexDelta = this.innerNode.offsetWidth - this.widthTotal - this.innerPadding + gap;
@@ -265,14 +251,14 @@ var RCarousel = function (_React$Component) {
     key: 'findSlideIndex',
     value: function findSlideIndex(delta) {
       var absDelta = Math.abs(delta);
-      if (delta > 0 || absDelta < this.checkpoints[0].val) {
+      if (delta > 0 || absDelta < this.checkpoints[0]) {
         return 0;
       }
-      if (absDelta > this.checkpoints[this.checkpoints.length - 1].val) {
+      if (absDelta > this.checkpoints[this.checkpoints.length - 1]) {
         return this.checkpoints.length - 1;
       }
       for (var i = 0; i < this.checkpoints.length - 1; i++) {
-        if (absDelta >= this.checkpoints[i].val && absDelta < this.checkpoints[i + 1].val) {
+        if (absDelta >= this.checkpoints[i] && absDelta < this.checkpoints[i + 1]) {
           return i + 1;
         }
       }
@@ -281,9 +267,9 @@ var RCarousel = function (_React$Component) {
   }, {
     key: 'handleTransitionEnd',
     value: function handleTransitionEnd() {
-      var _props5 = this.props,
-          loop = _props5.loop,
-          disableCheckpoints = _props5.disableCheckpoints;
+      var _props4 = this.props,
+          loop = _props4.loop,
+          disableCheckpoints = _props4.disableCheckpoints;
 
 
       if (loop) {
@@ -306,14 +292,18 @@ var RCarousel = function (_React$Component) {
     value: function goToSlide(nextIndex, withoutAnimation) {
       if (nextIndex < 0 || nextIndex >= this.itemNodes.length || this.innerNode === null) return;
 
-      var _props6 = this.props,
-          transitionDuration = _props6.transitionDuration,
-          loop = _props6.loop,
-          gap = _props6.gap,
-          children = _props6.children;
+      var _props5 = this.props,
+          transitionDuration = _props5.transitionDuration,
+          loop = _props5.loop,
+          gap = _props5.gap,
+          children = _props5.children;
 
       var lastIndexDelta = this.innerNode.offsetWidth - this.widthTotal - this.innerPadding + gap;
-      var nextDelta = this.checkpoints.length ? this.checkpoints[nextIndex].offset : 0;
+
+      var nextDelta = 0;
+      for (var i = 0; i < nextIndex; i++) {
+        nextDelta -= this.itemWidths[i % children.length];
+      }
 
       if (!loop && nextDelta <= lastIndexDelta) {
         // фикс для последнего слайда
@@ -335,9 +325,9 @@ var RCarousel = function (_React$Component) {
     key: 'handlePaginationClick',
     value: function handlePaginationClick(e) {
       e.stopPropagation();
-      var _props7 = this.props,
-          loop = _props7.loop,
-          children = _props7.children;
+      var _props6 = this.props,
+          loop = _props6.loop,
+          children = _props6.children;
 
       var idx = parseInt(e.target.dataset.idx, 10);
       this.goToSlide(loop ? idx + children.length : idx);
@@ -375,9 +365,9 @@ var RCarousel = function (_React$Component) {
     value: function renderItem(item, i) {
       var _this2 = this;
 
-      var _props8 = this.props,
-          classNames = _props8.classNames,
-          gap = _props8.gap;
+      var _props7 = this.props,
+          classNames = _props7.classNames,
+          gap = _props7.gap;
 
       return _react2.default.createElement(
         'div',
