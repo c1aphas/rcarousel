@@ -21,7 +21,6 @@ class RCarousel extends React.Component {
     this.handleItemClick = this.handleItemClick.bind(this);
     this.handlePrevClick = this.handlePrevClick.bind(this);
     this.handleNextClick = this.handleNextClick.bind(this);
-    this.handleViewportResize = this.handleViewportResize.bind(this);
   }
 
   componentDidMount() {
@@ -66,9 +65,9 @@ class RCarousel extends React.Component {
     window.removeEventListener('resize', this.handleViewportResize);
   }
 
-  setStylesWithPrefixes(node, delta, duration = 0.3) {
-    this.rafId = requestAnimationFrame(() => {
-      Object.assign(node.style, {
+  setStylesWithPrefixes(delta, duration = 0.3) {
+    requestAnimationFrame(() => {
+      Object.assign(this.innerNode.style, {
         transform:          `translate3d(${delta}px, 0, 0)`,
         transitionDuration: `${duration}s`,
       });
@@ -120,7 +119,7 @@ class RCarousel extends React.Component {
     }
   }
 
-  handleViewportResize() {
+  handleViewportResize = () => {
     this.calcBasicValues();
     if (this.props.loop) {
       this.setState({rend: this.repeatsOnScreen * SCREEN_FACTOR});
@@ -140,12 +139,12 @@ class RCarousel extends React.Component {
 
   swipingLeft(e, delta) {
     this.swippingDelta = this.currentDelta - delta.x;
-    this.setStylesWithPrefixes(this.innerNode, this.swippingDelta, 0);
+    this.setStylesWithPrefixes(this.swippingDelta, 0);
   }
 
   swipingRight(e, delta) {
     this.swippingDelta = this.currentDelta - delta.x;
-    this.setStylesWithPrefixes(this.innerNode, this.swippingDelta, 0);
+    this.setStylesWithPrefixes(this.swippingDelta, 0);
   }
 
   swiped(e, {x: deltaX}) {
@@ -162,7 +161,7 @@ class RCarousel extends React.Component {
       } else {
         this.currentDelta = nextDelta;
       }
-      this.setStylesWithPrefixes(this.innerNode, this.currentDelta, transitionDuration);
+      this.setStylesWithPrefixes(this.currentDelta, transitionDuration);
     } else {
       const nextIndex = this.findSlideIndex(nextDelta);
       this.isToggled = nextIndex !== this.state.currentIndex;
@@ -197,7 +196,7 @@ class RCarousel extends React.Component {
         } else if (Math.abs(this.currentDelta) <= this.childrenWidth) {
           this.currentDelta -= this.childrenWidth;
         }
-        this.setStylesWithPrefixes(this.innerNode, this.currentDelta, 0);
+        this.setStylesWithPrefixes(this.currentDelta, 0);
       } else if (this.state.currentIndex < this.itemsOnScreen) {
         this.goToSlide(this.state.currentIndex + this.itemsOnScreen, true);
       } else if (this.state.currentIndex >= this.itemsOnScreen * 2) {
@@ -227,7 +226,6 @@ class RCarousel extends React.Component {
     this.currentIndex = nextIndex;
 
     this.setStylesWithPrefixes(
-      this.innerNode,
       this.currentDelta,
       withoutAnimation ? 0 : transitionDuration
     );

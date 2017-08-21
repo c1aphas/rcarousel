@@ -8,13 +8,6 @@ const IS_STRICT = true;
 
 export default function(WrappedComponent) {
   return class Swipeable extends React.PureComponent {
-    constructor(props) {
-      super(props);
-      this.handleTouchStart = this.handleTouchStart.bind(this);
-      this.handleTouchMove = this.handleTouchMove.bind(this);
-      this.handleTouchEnd = this.handleTouchEnd.bind(this);
-    }
-
     initialX = 0
     initialY = 0
     delta = {x: 0, y: 0}
@@ -73,7 +66,7 @@ export default function(WrappedComponent) {
       this.wci.innerNode.removeEventListener('touchcancel', this.handleTouchEnd);
     }
 
-    handleTouchStart(e) {
+    handleTouchStart = (e) => {
       this.shouldBlockScrollX = false;
       this.shouldBlockScrollY = false;
       if (this.isStopPropagationAllowed() && this.wci.props.stopPropagation) {
@@ -94,7 +87,7 @@ export default function(WrappedComponent) {
       this.delta = nextDelta;
     }
 
-    handleTouchMove(e) {
+    handleTouchMove = (e) => {
       if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
         e.stopPropagation();
       }
@@ -143,7 +136,7 @@ export default function(WrappedComponent) {
       this.shouldBlockScrollY && e.preventDefault();
     }
 
-    handleTouchEnd(e) {
+    handleTouchEnd = (e) => {
       if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
         e.stopPropagation();
       }
