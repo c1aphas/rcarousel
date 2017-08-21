@@ -99,6 +99,7 @@ export default function(WrappedComponent) {
         y: this.initialY - e.targetTouches[0].clientY,
       };
       this.getDirection(nextDelta);
+      this.setDelta(nextDelta);
       switch (this.direction) {
         case DIRECTION_LEFT:
           if (!this.shouldBlockScrollX) {

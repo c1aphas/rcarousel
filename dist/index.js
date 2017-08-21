@@ -44,6 +44,14 @@ var RCarousel = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (RCarousel.__proto__ || Object.getPrototypeOf(RCarousel)).call(this, props));
 
+    _this.handleViewportResize = function () {
+      _this.calcBasicValues();
+      if (_this.props.loop) {
+        _this.setState({ rend: _this.repeatsOnScreen * SCREEN_FACTOR });
+      }
+      _this.goToSlide(_this.state.currentIndex, true);
+    };
+
     _this.currentDelta = 0;
     _this.swippingDelta = 0;
     _this.widthTotal = 0;
@@ -76,7 +84,6 @@ var RCarousel = function (_React$Component) {
     _this.handleItemClick = _this.handleItemClick.bind(_this);
     _this.handlePrevClick = _this.handlePrevClick.bind(_this);
     _this.handleNextClick = _this.handleNextClick.bind(_this);
-    _this.handleViewportResize = _this.handleViewportResize.bind(_this);
     return _this;
   }
 
@@ -135,11 +142,13 @@ var RCarousel = function (_React$Component) {
     }
   }, {
     key: 'setStylesWithPrefixes',
-    value: function setStylesWithPrefixes(node, delta) {
-      var duration = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.3;
+    value: function setStylesWithPrefixes(delta) {
+      var _this2 = this;
 
-      this.rafId = requestAnimationFrame(function () {
-        Object.assign(node.style, {
+      var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0.3;
+
+      requestAnimationFrame(function () {
+        Object.assign(_this2.innerNode.style, {
           transform: 'translate3d(' + delta + 'px, 0, 0)',
           transitionDuration: duration + 's'
         });
@@ -196,25 +205,16 @@ var RCarousel = function (_React$Component) {
       }
     }
   }, {
-    key: 'handleViewportResize',
-    value: function handleViewportResize() {
-      this.calcBasicValues();
-      if (this.props.loop) {
-        this.setState({ rend: this.repeatsOnScreen * SCREEN_FACTOR });
-      }
-      this.goToSlide(this.state.currentIndex, true);
-    }
-  }, {
     key: 'swipingLeft',
     value: function swipingLeft(e, delta) {
       this.swippingDelta = this.currentDelta - delta.x;
-      this.setStylesWithPrefixes(this.innerNode, this.swippingDelta, 0);
+      this.setStylesWithPrefixes(this.swippingDelta, 0);
     }
   }, {
     key: 'swipingRight',
     value: function swipingRight(e, delta) {
       this.swippingDelta = this.currentDelta - delta.x;
-      this.setStylesWithPrefixes(this.innerNode, this.swippingDelta, 0);
+      this.setStylesWithPrefixes(this.swippingDelta, 0);
     }
   }, {
     key: 'swiped',
@@ -239,7 +239,7 @@ var RCarousel = function (_React$Component) {
         } else {
           this.currentDelta = nextDelta;
         }
-        this.setStylesWithPrefixes(this.innerNode, this.currentDelta, transitionDuration);
+        this.setStylesWithPrefixes(this.currentDelta, transitionDuration);
       } else {
         var nextIndex = this.findSlideIndex(nextDelta);
         this.isToggled = nextIndex !== this.state.currentIndex;
@@ -279,7 +279,7 @@ var RCarousel = function (_React$Component) {
           } else if (Math.abs(this.currentDelta) <= this.childrenWidth) {
             this.currentDelta -= this.childrenWidth;
           }
-          this.setStylesWithPrefixes(this.innerNode, this.currentDelta, 0);
+          this.setStylesWithPrefixes(this.currentDelta, 0);
         } else if (this.state.currentIndex < this.itemsOnScreen) {
           this.goToSlide(this.state.currentIndex + this.itemsOnScreen, true);
         } else if (this.state.currentIndex >= this.itemsOnScreen * 2) {
@@ -315,7 +315,7 @@ var RCarousel = function (_React$Component) {
       this.isLastReached = nextDelta <= lastIndexDelta;
       this.currentIndex = nextIndex;
 
-      this.setStylesWithPrefixes(this.innerNode, this.currentDelta, withoutAnimation ? 0 : transitionDuration);
+      this.setStylesWithPrefixes(this.currentDelta, withoutAnimation ? 0 : transitionDuration);
       this.setState({
         currentIndex: nextIndex,
         realIndex: nextIndex % children.length
@@ -363,7 +363,7 @@ var RCarousel = function (_React$Component) {
   }, {
     key: 'renderItem',
     value: function renderItem(item, i) {
-      var _this2 = this;
+      var _this3 = this;
 
       var _props7 = this.props,
           classNames = _props7.classNames,
@@ -376,11 +376,11 @@ var RCarousel = function (_React$Component) {
           'data-index': i,
           className: (0, _classnames2.default)(classNames.item, _defineProperty({}, classNames.itemActive, this.isItemActive(i))),
           ref: function ref(node) {
-            return _this2.itemNodes[i] = node;
+            return _this3.itemNodes[i] = node;
           },
           style: { marginLeft: gap },
           onClick: function onClick(e) {
-            return _this2.handleItemClick(i, e);
+            return _this3.handleItemClick(i, e);
           }
         },
         item
@@ -417,7 +417,7 @@ var RCarousel = function (_React$Component) {
   }, {
     key: 'renderPagination',
     value: function renderPagination() {
-      var _this3 = this;
+      var _this4 = this;
 
       var classNames = this.props.classNames;
 
@@ -431,8 +431,8 @@ var RCarousel = function (_React$Component) {
           return _react2.default.createElement('button', {
             key: item.key || i,
             'data-idx': i,
-            className: (0, _classnames2.default)(classNames.paginationItem, _defineProperty({}, classNames.paginationItemActive, _this3.isItemActive(i))),
-            onClick: _this3.handlePaginationClick
+            className: (0, _classnames2.default)(classNames.paginationItem, _defineProperty({}, classNames.paginationItemActive, _this4.isItemActive(i))),
+            onClick: _this4.handlePaginationClick
           });
         })
       );
@@ -440,7 +440,7 @@ var RCarousel = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this4 = this;
+      var _this5 = this;
 
       var classNames = this.props.classNames;
 
@@ -455,7 +455,7 @@ var RCarousel = function (_React$Component) {
           {
             className: (0, _classnames2.default)(classNames.inner),
             ref: function ref(node) {
-              return _this4.innerNode = node;
+              return _this5.innerNode = node;
             },
             onTransitionEnd: this.handleTransitionEnd
           },
