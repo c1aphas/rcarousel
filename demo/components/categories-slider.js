@@ -38,11 +38,10 @@ export default class TabCarousel extends React.Component {
         <section>
           <RCarousel
             classNames={sliderStyles}
-            currentIndex={this.state.sectionIndex}
             gap={30}
           >
-            <img src={`https://unsplash.it/200/300?gravity=${categories[this.state.sectionIndex]}`} alt="" />
-            <img src={`https://unsplash.it/200/300?gravity=${categories[this.state.sectionIndex]}`} alt="" />
+            <img style={{width: 200}} src={`https://unsplash.it/200/300?gravity=${categories[this.state.sectionIndex]}`} alt="" />
+            <img style={{width: 200}} src={`https://unsplash.it/200/300?gravity=${categories[this.state.sectionIndex]}`} alt="" />
           </RCarousel>
         </section>
       </div>
