@@ -1,4 +1,5 @@
 import React from 'react';
+import isSupportsPassive from './supports-passive';
 
 const DIRECTION_LEFT = 0;
 const DIRECTION_RIGHT = 1;
@@ -8,13 +9,6 @@ const IS_STRICT = true;
 
 export default function(WrappedComponent) {
   return class Swipeable extends React.PureComponent {
-    constructor(props) {
-      super(props);
-      this.handleTouchStart = this.handleTouchStart.bind(this);
-      this.handleTouchMove = this.handleTouchMove.bind(this);
-      this.handleTouchEnd = this.handleTouchEnd.bind(this);
-    }
-
     initialX = 0
     initialY = 0
     delta = {x: 0, y: 0}
@@ -59,10 +53,10 @@ export default function(WrappedComponent) {
     }
 
     componentDidMount() {
-      this.wci.innerNode.addEventListener('touchstart', this.handleTouchStart, false);
+      this.wci.innerNode.addEventListener('touchstart', this.handleTouchStart, isSupportsPassive ? {passive: true} : false);
       this.wci.innerNode.addEventListener('touchmove', this.handleTouchMove, false);
-      this.wci.innerNode.addEventListener('touchend', this.handleTouchEnd, false);
-      this.wci.innerNode.addEventListener('touchcancel', this.handleTouchEnd, false);
+      this.wci.innerNode.addEventListener('touchend', this.handleTouchEnd, isSupportsPassive ? {passive: true} : false);
+      this.wci.innerNode.addEventListener('touchcancel', this.handleTouchEnd, isSupportsPassive ? {passive: true} : false);
       this.setIosHack();
     }
 
@@ -73,7 +67,7 @@ export default function(WrappedComponent) {
       this.wci.innerNode.removeEventListener('touchcancel', this.handleTouchEnd);
     }
 
-    handleTouchStart(e) {
+    handleTouchStart = (e) => {
       this.shouldBlockScrollX = false;
       this.shouldBlockScrollY = false;
       if (this.isStopPropagationAllowed() && this.wci.props.stopPropagation) {
@@ -84,9 +78,6 @@ export default function(WrappedComponent) {
         this.initialY = e.targetTouches[0].clientY;
         this.wci.swipeStart && this.wci.swipeStart(e);
       }
-      if (this.shouldBlockScrollY) {
-        e.preventDefault();
-      }
     }
 
     setDelta(nextDelta) {
@@ -94,7 +85,7 @@ export default function(WrappedComponent) {
       this.delta = nextDelta;
     }
 
-    handleTouchMove(e) {
+    handleTouchMove = (e) => {
       if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
         e.stopPropagation();
       }
@@ -143,7 +134,7 @@ export default function(WrappedComponent) {
       this.shouldBlockScrollY && e.preventDefault();
     }
 
-    handleTouchEnd(e) {
+    handleTouchEnd = (e) => {
       if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
         e.stopPropagation();
       }
@@ -161,9 +152,6 @@ export default function(WrappedComponent) {
       this.shouldBlockScrollY = false;
       this.setDelta({x: 0, y: 0});
       this.prevDelta = {x: 0, y: 0};
-      if (this.shouldBlockScrollY) {
-        e.preventDefault();
-      }
     }
 
     render() {

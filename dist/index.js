@@ -153,10 +153,13 @@ var RCarousel = function (_React$Component) {
   }, {
     key: 'getItemWidths',
     value: function getItemWidths() {
+      var offset = 0;
       var itemWidths = [];
       for (var i = 0; i < this.props.children.length; i++) {
         if (this.itemNodes[i]) {
-          itemWidths.push(this.itemNodes[i].offsetWidth + this.props.gap);
+          var width = this.itemNodes[i].offsetWidth + this.props.gap;
+          itemWidths.push({ width: width, offset: offset });
+          offset -= width;
         }
       }
       return itemWidths;
@@ -166,7 +169,7 @@ var RCarousel = function (_React$Component) {
     value: function getChildrenWidth(itemWidths) {
       var total = 0;
       for (var i = 0; i < itemWidths.length; i++) {
-        total += itemWidths[i];
+        total += itemWidths[i].width;
       }
       return total;
     }
@@ -176,8 +179,9 @@ var RCarousel = function (_React$Component) {
       var sum = 0;
       var checkpoints = [];
       for (var i = 0; i < itemWidths.length * this.state.rend; i++) {
-        checkpoints.push(itemWidths[i % itemWidths.length] / 2 + sum);
-        sum += itemWidths[i % itemWidths.length];
+        var width = itemWidths[i % itemWidths.length].width;
+        checkpoints.push(width / 2 + sum);
+        sum += width;
       }
       return checkpoints;
     }
@@ -296,20 +300,24 @@ var RCarousel = function (_React$Component) {
           transitionDuration = _props5.transitionDuration,
           loop = _props5.loop,
           gap = _props5.gap,
+          center = _props5.center,
           children = _props5.children;
 
       var lastIndexDelta = this.innerNode.offsetWidth - this.widthTotal - this.innerPadding + gap;
 
-      var nextDelta = 0;
-      for (var i = 0; i < nextIndex; i++) {
-        nextDelta -= this.itemWidths[i % children.length];
+      var nextDelta = -Math.floor(nextIndex / children.length) * this.childrenWidth;
+      nextDelta += this.itemWidths[nextIndex % children.length].offset;
+
+      if (center) {
+        var addon = (this.innerNode.offsetWidth - this.itemWidths[nextIndex % children.length].width + gap) / 2;
+        nextDelta = Math.max(nextDelta + addon, lastIndexDelta);
       }
 
       if (!loop && nextDelta <= lastIndexDelta) {
         // фикс для последнего слайда
         this.currentDelta = Math.min(lastIndexDelta, 0);
       } else {
-        this.currentDelta = nextDelta;
+        this.currentDelta = Math.min(nextDelta, 0);
       }
 
       this.isLastReached = nextDelta <= lastIndexDelta;
@@ -489,6 +497,7 @@ RCarousel.defaultProps = {
   prevNext: false,
   stopPropagation: false,
   loop: false,
+  center: false,
   onSlideChange: function onSlideChange() {}, // Нигде не используется
   onInit: function onInit() {},
   onSwiped: function onSwiped() {},
@@ -514,6 +523,7 @@ RCarousel.propTypes = {
     buttonPrev: pt.string
   }),
   loop: pt.bool,
+  center: pt.bool,
   pagination: pt.bool,
   prevNext: pt.bool,
   disableCheckpoints: pt.bool,
