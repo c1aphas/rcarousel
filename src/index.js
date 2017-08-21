@@ -65,6 +65,7 @@ class RCarousel extends React.Component {
     window.removeEventListener('resize', this.handleViewportResize);
   }
 
+
   setStylesWithPrefixes(delta, duration = 0.3) {
     requestAnimationFrame(() => {
       Object.assign(this.innerNode.style, {
