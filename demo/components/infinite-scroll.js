@@ -1,6 +1,7 @@
 import React from 'react';
 import RCarousel from '../../src/index';
 import sliderStyles from '../carouselStyles.scss';
+import Item from './Item';
 
 export default class InfiniteCarousel extends React.Component {
 
@@ -11,12 +12,9 @@ export default class InfiniteCarousel extends React.Component {
         loop
         gap={30}
       >
-        <img src="https://unsplash.it/600/400?random=1" alt="" />
-        <img src="https://unsplash.it/600/400?random=2" alt="" />
-        <img src="https://unsplash.it/600/400?random=3" alt="" />
-        <img src="https://unsplash.it/600/400?random=4" alt="" />
-        <img src="https://unsplash.it/600/400?random=5" alt="" />
-        <img src="https://unsplash.it/600/400?random=6" alt="" />
+        {
+        [1, 2, 3, 4, 5, 6].map(num => <Item text={num} />)
+        }
       </RCarousel>
     );
   }
