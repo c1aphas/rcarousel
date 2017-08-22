@@ -263,7 +263,7 @@ class RCarousel extends React.Component {
     return this.state.currentIndex % len === i % len;
   }
 
-  renderItem(item, i) {
+  renderItem = (item, i) => {
     const {classNames, gap} = this.props;
     return (
       <div
