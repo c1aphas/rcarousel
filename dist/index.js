@@ -18,14 +18,6 @@ var _classnames = require('classnames');
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-var _times2 = require('lodash/times');
-
-var _times3 = _interopRequireDefault(_times2);
-
-var _findIndex2 = require('lodash/findIndex');
-
-var _findIndex3 = _interopRequireDefault(_findIndex2);
-
 var _swipeable = require('./swipeable');
 
 var _swipeable2 = _interopRequireDefault(_swipeable);
@@ -42,6 +34,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+var SCREEN_FACTOR = 3;
+
 var RCarousel = function (_React$Component) {
   _inherits(RCarousel, _React$Component);
 
@@ -49,6 +43,14 @@ var RCarousel = function (_React$Component) {
     _classCallCheck(this, RCarousel);
 
     var _this = _possibleConstructorReturn(this, (RCarousel.__proto__ || Object.getPrototypeOf(RCarousel)).call(this, props));
+
+    _this.handleViewportResize = function () {
+      _this.calcBasicValues();
+      if (_this.props.loop) {
+        _this.setState({ rend: _this.repeatsOnScreen * SCREEN_FACTOR });
+      }
+      _this.goToSlide(_this.state.currentIndex, true);
+    };
 
     _this.currentDelta = 0;
     _this.swippingDelta = 0;
@@ -60,18 +62,17 @@ var RCarousel = function (_React$Component) {
     _this.isToggled = false;
     _this.isLastReached = false;
 
-    _this.handleItemClick = function (e) {
-      var i = e.target.dataset.index;
+    _this.handleItemClick = function (i, e) {
       var _this$props = _this.props,
-          loop = _this$props.loop,
           onClick = _this$props.onClick,
           children = _this$props.children;
 
-      var clickedIndex = loop ? i % children.length : i;
-      onClick && onClick(clickedIndex, e);
+      var index = i % children.length;
+      onClick && onClick(index, e);
     };
 
     _this.state = {
+      rend: 1,
       realIndex: 0,
       currentIndex: 0,
       isClonesRendered: false,
@@ -83,7 +84,6 @@ var RCarousel = function (_React$Component) {
     _this.handleItemClick = _this.handleItemClick.bind(_this);
     _this.handlePrevClick = _this.handlePrevClick.bind(_this);
     _this.handleNextClick = _this.handleNextClick.bind(_this);
-    _this.renderItem = _this.renderItem.bind(_this);
     return _this;
   }
 
@@ -93,21 +93,23 @@ var RCarousel = function (_React$Component) {
       var _props = this.props,
           onInit = _props.onInit,
           loop = _props.loop,
-          children = _props.children;
+          currentIndex = _props.currentIndex;
 
-      var itemsCount = children.length;
 
-      this.innerPadding = parseInt(getComputedStyle(this.innerNode).getPropertyValue('padding-left'), 0) + parseInt(getComputedStyle(this.innerNode).getPropertyValue('padding-right'), 0);
+      this.innerPadding = parseInt(getComputedStyle(this.innerNode).getPropertyValue('padding-left'), 10) + parseInt(getComputedStyle(this.innerNode).getPropertyValue('padding-right'), 10);
+      window.addEventListener('orientationchange', this.handleViewportResize);
+      window.addEventListener('resize', this.handleViewportResize);
 
-      this.calcCheckpoints();
-      window.addEventListener('orientationchange', this.handleViewportResize.bind(this));
-      window.addEventListener('resize', this.handleViewportResize.bind(this));
-      // eslint-disable-next-line react/no-did-mount-set-state
+      this.calcBasicValues();
+      if (loop) {
+        this.setState({ rend: this.repeatsOnScreen * SCREEN_FACTOR });
+        this.goToSlide(this.itemsOnScreen + currentIndex, true);
+      } else {
+        this.goToSlide(currentIndex, true);
+      }
+
       this.setState({ rendered: true });
-
-      loop && this.goToSlide(itemsCount - 1, true);
-
-      !loop && onInit && onInit();
+      onInit && onInit();
     }
   }, {
     key: 'componentWillUpdate',
@@ -118,160 +120,217 @@ var RCarousel = function (_React$Component) {
     }
   }, {
     key: 'componentDidUpdate',
-    value: function componentDidUpdate(prevProps) {
+    value: function componentDidUpdate(prevProps, prevState) {
       var _props2 = this.props,
           children = _props2.children,
           currentIndex = _props2.currentIndex,
           loop = _props2.loop,
           onInit = _props2.onInit;
 
-      if (children.length !== prevProps.children.length) {
-        this.calcCheckpoints();
-        this.goToSlide(currentIndex, true);
+      if (children.length !== prevProps.children.length || this.state.rend !== prevState.rend) {
+        this.calcBasicValues();
+        this.goToSlide(loop ? this.itemsOnScreen + currentIndex : currentIndex, true);
       }
 
-      loop && onInit && onInit(); // здесь странно вызывать onInit();
+      loop && onInit && onInit();
+    }
+  }, {
+    key: 'componentWillUnmount',
+    value: function componentWillUnmount() {
+      window.removeEventListener('orientationchange', this.handleViewportResize);
+      window.removeEventListener('resize', this.handleViewportResize);
     }
   }, {
     key: 'setStylesWithPrefixes',
-    value: function setStylesWithPrefixes(node, delta) {
-      var duration = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.3;
+    value: function setStylesWithPrefixes(delta) {
+      var _this2 = this;
+
+      var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0.3;
 
       requestAnimationFrame(function () {
-        Object.assign(node.style, {
+        Object.assign(_this2.innerNode.style, {
           transform: 'translate3d(' + delta + 'px, 0, 0)',
           transitionDuration: duration + 's'
         });
       });
-      this.swippingDelta = delta;
     }
   }, {
-    key: 'handleViewportResize',
-    value: function handleViewportResize() {
-      if (this.innedNode) {
-        this.calcCheckpoints();
-        this.goToSlide(this.state.currentIndex, true);
-      }
+    key: 'getRepeatOnScreen',
+    value: function getRepeatOnScreen(childrenWidth) {
+      return this.innerNode === null ? 1 : Math.ceil(this.innerNode.offsetWidth / childrenWidth);
     }
   }, {
-    key: 'calcCheckpoints',
-    value: function calcCheckpoints() {
-      var _this2 = this;
-
-      var _props3 = this.props,
-          gap = _props3.gap,
-          loop = _props3.loop,
-          children = _props3.children;
-
-
-      this.checkpoints = [];
-      this.itemWidths = [];
-      this.widthTotal = 0;
-
-      (0, _times3.default)(loop ? children.length * 3 : children.length, function (i) {
-        var itemNode = _this2.itemNodes[loop ? i % children.length : i];
-        if (itemNode) {
-          var itemWidth = itemNode.offsetWidth + gap;
-          _this2.itemWidth = itemWidth;
-
-          _this2.itemWidths.push(itemWidth);
-          _this2.widthTotal += itemWidth;
-          _this2.checkpoints.push((itemNode.offsetWidth + gap) / 2 + (itemNode.offsetWidth + gap) * i);
+    key: 'getItemWidths',
+    value: function getItemWidths() {
+      var itemWidths = [];
+      for (var i = 0; i < this.props.children.length; i++) {
+        if (this.itemNodes[i]) {
+          itemWidths.push(this.itemNodes[i].offsetWidth + this.props.gap);
         }
-      });
+      }
+      return itemWidths;
+    }
+  }, {
+    key: 'getChildrenWidth',
+    value: function getChildrenWidth(itemWidths) {
+      var total = 0;
+      for (var i = 0; i < itemWidths.length; i++) {
+        total += itemWidths[i];
+      }
+      return total;
+    }
+  }, {
+    key: 'getCheckpoints',
+    value: function getCheckpoints(itemWidths) {
+      var sum = 0;
+      var checkpoints = [];
+      for (var i = 0; i < itemWidths.length * this.state.rend; i++) {
+        checkpoints.push(itemWidths[i % itemWidths.length] / 2 + sum);
+        sum += itemWidths[i % itemWidths.length];
+      }
+      return checkpoints;
+    }
+  }, {
+    key: 'calcBasicValues',
+    value: function calcBasicValues() {
+      this.itemWidths = this.getItemWidths();
+      this.childrenWidth = this.getChildrenWidth(this.itemWidths);
+      this.widthTotal = this.childrenWidth * this.state.rend;
+      if (!this.props.disableCheckpoints) {
+        this.checkpoints = this.getCheckpoints(this.itemWidths);
+      }
+      if (this.props.loop) {
+        this.repeatsOnScreen = this.getRepeatOnScreen(this.childrenWidth);
+        this.itemsOnScreen = this.repeatsOnScreen * this.props.children.length;
+      }
     }
   }, {
     key: 'swipingLeft',
     value: function swipingLeft(e, delta) {
-      this.setStylesWithPrefixes(this.innerNode, this.currentDelta - delta.x, 0);
+      this.swippingDelta = this.currentDelta - delta.x;
+      this.setStylesWithPrefixes(this.swippingDelta, 0);
     }
   }, {
     key: 'swipingRight',
     value: function swipingRight(e, delta) {
-      this.setStylesWithPrefixes(this.innerNode, this.currentDelta - delta.x, 0);
+      this.swippingDelta = this.currentDelta - delta.x;
+      this.setStylesWithPrefixes(this.swippingDelta, 0);
     }
   }, {
     key: 'swiped',
     value: function swiped(e, _ref) {
-      var _this3 = this;
-
       var deltaX = _ref.x;
 
-      this.isSwiped = true;
       this.isToggled = false;
-      var _props4 = this.props,
-          disableCheckpoints = _props4.disableCheckpoints,
-          loop = _props4.loop,
-          children = _props4.children,
-          onSwiped = _props4.onSwiped;
+      var _props3 = this.props,
+          disableCheckpoints = _props3.disableCheckpoints,
+          gap = _props3.gap,
+          onSwiped = _props3.onSwiped,
+          transitionDuration = _props3.transitionDuration;
 
       var nextDelta = this.currentDelta - deltaX;
-      // иногда не правильно расчитывается
-      var maxShift = window.innerWidth - this.widthTotal - this.innerPadding;
+      var lastIndexDelta = this.innerNode.offsetWidth - this.widthTotal - this.innerPadding + gap;
 
-      // Фикс на первый слайд
-      if (nextDelta > 0) {
-        this.currentIndex = 0;
-        this.currentDelta = 0;
-        this.setStylesWithPrefixes(this.innerNode, 0);
-      } else
-        // Фикс на последний слайд
-        if (nextDelta < maxShift) {
-          this.currentIndex = children.length - 1;
-          this.currentDelta = Math.min(maxShift, 0);
-          this.setStylesWithPrefixes(this.innerNode, this.currentDelta);
-        } else
-          // Свайп-скролл без фиксов на ближайший слайд
-          if (disableCheckpoints) {
-            if (loop) {
-              var itemsWidthPerScreen = this.widthTotal / 3;
-              if (Math.abs(nextDelta) >= itemsWidthPerScreen * 2) {
-                this.currentDelta += itemsWidthPerScreen;
-              } else if (Math.abs(nextDelta) <= itemsWidthPerScreen) {
-                this.currentDelta -= itemsWidthPerScreen;
-              }
-            }
-            this.currentDelta = nextDelta;
-            this.setStylesWithPrefixes(this.innerNode, this.currentDelta, 0);
-          } else {
-            // Фикс на ближайший слайд
-            var nextIndex = (0, _findIndex3.default)(this.checkpoints, function (checkpoint, i) {
-              return Math.abs(nextDelta) > checkpoint && Math.abs(nextDelta) < _this3.checkpoints[i + 1];
-            }) + (loop ? 0 : 1);
-            this.isToggled = nextIndex !== this.state.currentIndex;
-            this.goToSlide(nextIndex);
-          }
+      if (disableCheckpoints) {
+        if (nextDelta > 0) {
+          this.currentDelta = 0;
+        } else if (nextDelta <= lastIndexDelta) {
+          this.currentDelta = Math.min(lastIndexDelta, 0);
+        } else {
+          this.currentDelta = nextDelta;
+        }
+        this.setStylesWithPrefixes(this.currentDelta, transitionDuration);
+      } else {
+        var nextIndex = this.findSlideIndex(nextDelta);
+        this.isToggled = nextIndex !== this.state.currentIndex;
+        this.goToSlide(nextIndex);
+      }
       onSwiped && onSwiped(this.currentIndex);
+    }
+  }, {
+    key: 'findSlideIndex',
+    value: function findSlideIndex(delta) {
+      var absDelta = Math.abs(delta);
+      if (delta > 0 || absDelta < this.checkpoints[0]) {
+        return 0;
+      }
+      if (absDelta > this.checkpoints[this.checkpoints.length - 1]) {
+        return this.checkpoints.length - 1;
+      }
+      for (var i = 0; i < this.checkpoints.length - 1; i++) {
+        if (absDelta >= this.checkpoints[i] && absDelta < this.checkpoints[i + 1]) {
+          return i + 1;
+        }
+      }
+      return -1;
     }
   }, {
     key: 'handleTransitionEnd',
     value: function handleTransitionEnd() {
-      var _props5 = this.props,
-          onSwiped = _props5.onSwiped,
-          loop = _props5.loop,
-          children = _props5.children;
+      var _props4 = this.props,
+          loop = _props4.loop,
+          disableCheckpoints = _props4.disableCheckpoints;
 
-      if (!this.isToggled || !this.isSwiped) {
-        return false;
-      }
+
       if (loop) {
-        var min = this.itemNodes.length / 3;
-        var max = this.itemNodes.length - children.length - 1;
-        if (this.state.currentIndex < min - 1) {
-          // достигли первого слайда, показали последний
-          this.goToSlide(max - 1, true);
-        } else if (this.state.currentIndex >= max) {
-          // достигли последнего слайда, показали первый
-          this.goToSlide(min - 1, true);
+        if (disableCheckpoints) {
+          if (Math.abs(this.currentDelta) >= this.childrenWidth * 2) {
+            this.currentDelta += this.childrenWidth;
+          } else if (Math.abs(this.currentDelta) <= this.childrenWidth) {
+            this.currentDelta -= this.childrenWidth;
+          }
+          this.setStylesWithPrefixes(this.currentDelta, 0);
+        } else if (this.state.currentIndex < this.itemsOnScreen) {
+          this.goToSlide(this.state.currentIndex + this.itemsOnScreen, true);
+        } else if (this.state.currentIndex >= this.itemsOnScreen * 2) {
+          this.goToSlide(this.state.currentIndex - this.itemsOnScreen, true);
         }
       }
+    }
+  }, {
+    key: 'goToSlide',
+    value: function goToSlide(nextIndex, withoutAnimation) {
+      if (nextIndex < 0 || nextIndex >= this.itemNodes.length || this.innerNode === null) return;
+
+      var _props5 = this.props,
+          transitionDuration = _props5.transitionDuration,
+          loop = _props5.loop,
+          gap = _props5.gap,
+          children = _props5.children;
+
+      var lastIndexDelta = this.innerNode.offsetWidth - this.widthTotal - this.innerPadding + gap;
+
+      var nextDelta = 0;
+      for (var i = 0; i < nextIndex; i++) {
+        nextDelta -= this.itemWidths[i % children.length];
+      }
+
+      if (!loop && nextDelta <= lastIndexDelta) {
+        // фикс для последнего слайда
+        this.currentDelta = Math.min(lastIndexDelta, 0);
+      } else {
+        this.currentDelta = nextDelta;
+      }
+
+      this.isLastReached = nextDelta <= lastIndexDelta;
+      this.currentIndex = nextIndex;
+
+      this.setStylesWithPrefixes(this.currentDelta, withoutAnimation ? 0 : transitionDuration);
+      this.setState({
+        currentIndex: nextIndex,
+        realIndex: nextIndex % children.length
+      });
     }
   }, {
     key: 'handlePaginationClick',
     value: function handlePaginationClick(e) {
       e.stopPropagation();
-      var idx = parseInt(e.target.dataset.idx, 0);
-      this.goToSlide(idx + 4);
+      var _props6 = this.props,
+          loop = _props6.loop,
+          children = _props6.children;
+
+      var idx = parseInt(e.target.dataset.idx, 10);
+      this.goToSlide(loop ? idx + children.length : idx);
     }
   }, {
     key: 'togglePrevNext',
@@ -296,56 +355,15 @@ var RCarousel = function (_React$Component) {
       !this.isLastReached && this.togglePrevNext(currentIndex + 1);
     }
   }, {
-    key: 'goToSlide',
-    value: function goToSlide(nextIndex, withoutAnimation) {
-      if (!this.innerNode) return;
-      var _props6 = this.props,
-          transitionDuration = _props6.transitionDuration,
-          loop = _props6.loop,
-          gap = _props6.gap,
-          children = _props6.children;
-
-      var lastIndexDelta = this.innerNode.offsetWidth - this.widthTotal - this.innerPadding + gap;
-      this.currentIndex = nextIndex;
-      if (!loop && this.widthTotal + this.innerPadding < window.innerWidth) {
-        this.currentDelta = 0;
-      } else if (!loop && nextIndex === children.length - 1) {
-        this.isLastReached = true;
-        this.currentDelta = lastIndexDelta;
-      } else if (!loop && nextIndex === 0) {
-        this.currentDelta = 0;
-        this.isLastReached = false;
-      } else {
-        var nextDelta = -this.itemWidths.slice(0, loop ? nextIndex + 1 : nextIndex).reduce(function (a, b) {
-          return a + b;
-        }, 0);
-        if (nextDelta <= lastIndexDelta) {
-          this.isLastReached = true;
-          this.currentDelta = lastIndexDelta;
-        } else {
-          this.isLastReached = false;
-          this.currentDelta = nextDelta;
-        }
-      }
-
-      this.setStylesWithPrefixes(this.innerNode, this.currentDelta, withoutAnimation ? 0 : transitionDuration);
-      this.setState({
-        currentIndex: nextIndex,
-        realIndex: (nextIndex + 1) % children.length
-      });
-    }
-  }, {
     key: 'isItemActive',
     value: function isItemActive(i) {
-      var loop = this.props.loop;
-
-      if (!this.state.rendered) return false;
-      return loop ? i % (this.state.currentIndex + 1) === 0 : this.state.currentIndex === i;
+      var len = this.props.children.length;
+      return this.state.currentIndex % len === i % len;
     }
   }, {
     key: 'renderItem',
     value: function renderItem(item, i) {
-      var _this4 = this;
+      var _this3 = this;
 
       var _props7 = this.props,
           classNames = _props7.classNames,
@@ -358,32 +376,26 @@ var RCarousel = function (_React$Component) {
           'data-index': i,
           className: (0, _classnames2.default)(classNames.item, _defineProperty({}, classNames.itemActive, this.isItemActive(i))),
           ref: function ref(node) {
-            return _this4.itemNodes[i] = node;
+            return _this3.itemNodes[i] = node;
           },
           style: { marginLeft: gap },
-          onClick: this.handleItemClick
+          onClick: function onClick(e) {
+            return _this3.handleItemClick(i, e);
+          }
         },
         item
       );
     }
   }, {
-    key: 'renderLoopItems',
-    value: function renderLoopItems() {
-      var _this5 = this;
-
-      var children = this.props.children;
-
-      var itemsCount = children.length;
-      var items = [];
-      (0, _times3.default)(itemsCount * 3, function (i) {
-        items.push(_this5.renderItem(children[i % itemsCount], i));
-      });
-      return items;
-    }
-  }, {
     key: 'renderItems',
     value: function renderItems() {
-      return this.props.children.map(this.renderItem);
+      var children = this.props.children;
+
+      var items = [];
+      for (var i = 0; i < children.length * this.state.rend; i++) {
+        items.push(this.renderItem(children[i % children.length], i));
+      }
+      return items;
     }
   }, {
     key: 'renderPrevNext',
@@ -403,49 +415,54 @@ var RCarousel = function (_React$Component) {
       })];
     }
   }, {
-    key: 'render',
-    value: function render() {
-      var _this6 = this;
+    key: 'renderPagination',
+    value: function renderPagination() {
+      var _this4 = this;
 
-      var _props8 = this.props,
-          classNames = _props8.classNames,
-          loop = _props8.loop;
+      var classNames = this.props.classNames;
 
 
       return _react2.default.createElement(
         'div',
         {
-          className: (0, _classnames2.default)(classNames.root),
-          ref: function ref(node) {
-            return _this6.rootNode = node;
-          }
+          className: (0, _classnames2.default)(classNames.pagination)
+        },
+        this.props.children.map(function (item, i) {
+          return _react2.default.createElement('button', {
+            key: item.key || i,
+            'data-idx': i,
+            className: (0, _classnames2.default)(classNames.paginationItem, _defineProperty({}, classNames.paginationItemActive, _this4.isItemActive(i))),
+            onClick: _this4.handlePaginationClick
+          });
+        })
+      );
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this5 = this;
+
+      var classNames = this.props.classNames;
+
+
+      return _react2.default.createElement(
+        'div',
+        {
+          className: (0, _classnames2.default)(classNames.root)
         },
         _react2.default.createElement(
           'div',
           {
             className: (0, _classnames2.default)(classNames.inner),
             ref: function ref(node) {
-              return _this6.innerNode = node;
+              return _this5.innerNode = node;
             },
             onTransitionEnd: this.handleTransitionEnd
           },
-          loop ? this.renderLoopItems() : this.renderItems()
+          this.renderItems()
         ),
         this.props.prevNext && this.renderPrevNext(),
-        this.props.pagination && _react2.default.createElement(
-          'div',
-          {
-            className: (0, _classnames2.default)(classNames.pagination)
-          },
-          this.props.children.map(function (item, i) {
-            return _react2.default.createElement('button', {
-              key: item.key,
-              'data-idx': i,
-              className: (0, _classnames2.default)(classNames.paginationItem, _defineProperty({}, classNames.paginationItemActive, loop ? i === (_this6.state.currentIndex + 1) % 5 : i === _this6.state.currentIndex)),
-              onClick: _this6.handlePaginationClick
-            });
-          })
-        )
+        this.props.pagination && this.renderPagination()
       );
     }
   }]);
@@ -476,7 +493,7 @@ RCarousel.defaultProps = {
   onInit: function onInit() {},
   onSwiped: function onSwiped() {},
   onClick: function onClick() {},
-  currentIndex: -1,
+  currentIndex: 0,
   disableCheckpoints: false,
   isRelatedInnerSlider: false
 };

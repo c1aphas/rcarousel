@@ -4,6 +4,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 exports.default = function (WrappedComponent) {
@@ -21,7 +23,90 @@ exports.default = function (WrappedComponent) {
         args[_key] = arguments[_key];
       }
 
-      return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = Swipeable.__proto__ || Object.getPrototypeOf(Swipeable)).call.apply(_ref, [this].concat(args))), _this), _this.initialX = 0, _this.initialY = 0, _this.delta = { x: 0, y: 0 }, _this.prevDelta = { x: 0, y: 0 }, _this.direction = -1, _this.initialized = false, _this.shouldBlockScrollY = false, _this.shouldBlockScrollX = false, _temp), _possibleConstructorReturn(_this, _ret);
+      return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = Swipeable.__proto__ || Object.getPrototypeOf(Swipeable)).call.apply(_ref, [this].concat(args))), _this), _this.initialX = 0, _this.initialY = 0, _this.delta = { x: 0, y: 0 }, _this.prevDelta = { x: 0, y: 0 }, _this.direction = -1, _this.shouldBlockScrollY = false, _this.shouldBlockScrollX = false, _this.handleTouchStart = function (e) {
+        _this.shouldBlockScrollX = false;
+        _this.shouldBlockScrollY = false;
+        if (_this.isStopPropagationAllowed() && _this.wci.props.stopPropagation) {
+          e.stopPropagation();
+        }
+        if (e.targetTouches.length) {
+          _this.initialX = e.targetTouches[0].clientX;
+          _this.initialY = e.targetTouches[0].clientY;
+          _this.wci.swipeStart && _this.wci.swipeStart(e);
+        }
+        if (_this.shouldBlockScrollY) {
+          e.preventDefault();
+        }
+      }, _this.handleTouchMove = function (e) {
+        if (_this.isStopPropagationAllowed(IS_STRICT) && _this.wci.props.stopPropagation) {
+          e.stopPropagation();
+        }
+        if (!e.targetTouches.length) {
+          return;
+        }
+        var nextDelta = {
+          x: _this.initialX - e.targetTouches[0].clientX,
+          y: _this.initialY - e.targetTouches[0].clientY
+        };
+        _this.getDirection(nextDelta);
+        _this.setDelta(nextDelta);
+        switch (_this.direction) {
+          case DIRECTION_LEFT:
+            if (!_this.shouldBlockScrollX) {
+              _this.shouldBlockScrollY = true;
+              if (_this.wci.swipingLeft && _this.isStopPropagationAllowed(IS_STRICT)) {
+                _this.wci.swipingLeft(e, _this.delta);
+              }
+            }
+            break;
+          case DIRECTION_RIGHT:
+            if (!_this.shouldBlockScrollX) {
+              _this.shouldBlockScrollY = true;
+              if (_this.wci.swipingRight && _this.isStopPropagationAllowed(IS_STRICT)) {
+                _this.wci.swipingRight(e, _this.delta);
+              }
+            }
+            break;
+          case DIRECTION_UP:
+            if (!_this.shouldBlockScrollY) {
+              _this.shouldBlockScrollX = true;
+            }
+            _this.wci.swipingUp && _this.wci.swipingUp(e, _this.delta);
+            break;
+          case DIRECTION_DOWN:
+            if (!_this.shouldBlockScrollY) {
+              _this.shouldBlockScrollX = true;
+            }
+            _this.wci.swipingDown && _this.wci.swipingDown(e, _this.delta);
+            break;
+          default:
+        }
+        _this.wci.swiping && _this.wci.swiping(e, _this.delta);
+        _this.setDelta(nextDelta);
+
+        _this.shouldBlockScrollY && e.preventDefault();
+      }, _this.handleTouchEnd = function (e) {
+        if (_this.isStopPropagationAllowed(IS_STRICT) && _this.wci.props.stopPropagation) {
+          e.stopPropagation();
+        }
+
+        _this.delta = {
+          x: _this.shouldBlockScrollX ? 0 : _this.delta.x,
+          y: _this.shouldBlockScrollY ? 0 : _this.delta.y
+        };
+
+        if (_this.delta.x !== 0) {
+          _this.wci.swiped && _this.wci.swiped(e, _this.delta);
+        }
+
+        _this.shouldBlockScrollX = false;
+        _this.shouldBlockScrollY = false;
+        _this.setDelta({ x: 0, y: 0 });
+        _this.prevDelta = { x: 0, y: 0 };
+        if (_this.shouldBlockScrollY) {
+          e.preventDefault();
+        }
+      }, _temp), _possibleConstructorReturn(_this, _ret);
     }
 
     _createClass(Swipeable, [{
@@ -47,30 +132,33 @@ exports.default = function (WrappedComponent) {
         var isSwippingInner = isFirst && isSwippingFirst || isLast && isSwippingLast;
         return !this.wci.props.isRelatedInnerSlider || !isSwippingInner;
       }
+
+      // https://github.com/timruffles/ios-html5-drag-drop-shim/issues/77
+
     }, {
-      key: 'init',
-      value: function init(WrappedComponentInstance) {
-        if (!WrappedComponentInstance || this.initialized) return;
-        this.initialized = true;
-        this.wci = WrappedComponentInstance;
-        document.addEventListener('scroll', this.handleScroll.bind(this), false);
-        this.wci.innerNode.addEventListener('touchstart', this.handleTouchStart.bind(this), false);
-        this.wci.innerNode.addEventListener('touchmove', this.handleTouchMove.bind(this), false);
-        this.wci.innerNode.addEventListener('touchend', this.handleTouchEnd.bind(this), false);
-        this.wci.innerNode.addEventListener('touchcancel', this.handleTouchEnd.bind(this), false);
+      key: 'setIosHack',
+      value: function setIosHack() {
+        if (!window.iosPreventDefaultScroll) {
+          window.addEventListener('touchmove', function () {});
+          window.iosPreventDefaultScroll = 1;
+        }
       }
     }, {
-      key: 'handleTouchStart',
-      value: function handleTouchStart(e) {
-        this.shouldBlockScrollX = false;
-        this.shouldBlockScrollY = false;
-        if (this.isStopPropagationAllowed() && this.wci.props.stopPropagation) {
-          e.stopPropagation();
-        }
-        this.initialX = e.touches[0].clientX;
-        this.initialY = e.touches[0].clientY;
-
-        this.wci.swipeStart && this.wci.swipeStart(e);
+      key: 'componentDidMount',
+      value: function componentDidMount() {
+        this.wci.innerNode.addEventListener('touchstart', this.handleTouchStart, false);
+        this.wci.innerNode.addEventListener('touchmove', this.handleTouchMove, false);
+        this.wci.innerNode.addEventListener('touchend', this.handleTouchEnd, false);
+        this.wci.innerNode.addEventListener('touchcancel', this.handleTouchEnd, false);
+        this.setIosHack();
+      }
+    }, {
+      key: 'componentWillUnmount',
+      value: function componentWillUnmount() {
+        this.wci.innerNode.removeEventListener('touchstart', this.handleTouchStart);
+        this.wci.innerNode.removeEventListener('touchmove', this.handleTouchMove);
+        this.wci.innerNode.removeEventListener('touchend', this.handleTouchEnd);
+        this.wci.innerNode.removeEventListener('touchcancel', this.handleTouchEnd);
       }
     }, {
       key: 'setDelta',
@@ -79,85 +167,13 @@ exports.default = function (WrappedComponent) {
         this.delta = nextDelta;
       }
     }, {
-      key: 'handleScroll',
-      value: function handleScroll() {
-        if (!this.shouldBlockScrollY) {
-          this.shouldBlockScrollX = true;
-        }
-      }
-    }, {
-      key: 'handleTouchMove',
-      value: function handleTouchMove(e) {
-        if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
-          e.stopPropagation();
-        }
-        var nextDelta = {
-          x: this.initialX - e.touches[0].clientX,
-          y: this.initialY - e.touches[0].clientY
-        };
-        this.getDirection(nextDelta);
-        this.setDelta(nextDelta);
-        switch (this.direction) {
-          case DIRECTION_LEFT:
-            if (!this.shouldBlockScrollX) {
-              this.shouldBlockScrollY = true;
-              if (this.wci.swipingLeft && this.isStopPropagationAllowed(IS_STRICT)) {
-                this.wci.swipingLeft(e, this.delta);
-              }
-            }
-            break;
-          case DIRECTION_RIGHT:
-            if (!this.shouldBlockScrollX) {
-              this.shouldBlockScrollY = true;
-              if (this.wci.swipingRight && this.isStopPropagationAllowed(IS_STRICT)) {
-                this.wci.swipingRight(e, this.delta);
-              }
-            }
-            break;
-          case DIRECTION_UP:
-            if (!this.shouldBlockScrollY) {
-              this.shouldBlockScrollX = true;
-            }
-            this.wci.swipingUp && this.wci.swipingUp(e, this.delta);
-            break;
-          case DIRECTION_DOWN:
-            if (!this.shouldBlockScrollY) {
-              this.shouldBlockScrollX = true;
-            }
-            this.wci.swipingDown && this.wci.swipingDown(e, this.delta);
-            break;
-          default:
-        }
-        this.wci.swiping && this.wci.swiping(e, this.delta);
-
-        this.shouldBlockScrollY && e.preventDefault();
-      }
-    }, {
-      key: 'handleTouchEnd',
-      value: function handleTouchEnd(e) {
-        if (this.isStopPropagationAllowed(IS_STRICT) && this.wci.props.stopPropagation) {
-          e.stopPropagation();
-        }
-
-        if (this.delta.x !== 0) {
-          this.wci.swiped && this.wci.swiped(e, this.delta);
-          if (this.direction === DIRECTION_LEFT) {
-            this.wci.swipedLeft && this.wci.swipedLeft(e, this.delta);
-          } else if (this.direction === DIRECTION_RIGHT) {
-            this.wci.swipedRight && this.wci.swipedRight(e, this.delta);
-          }
-        }
-
-        this.shouldBlockScrollX = false;
-        this.shouldBlockScrollY = false;
-        this.prevDelta = { x: 0, y: 0 };
-      }
-    }, {
       key: 'render',
       value: function render() {
-        // eslint-disable-next-line react/jsx-no-bind
-        var props = Object.assign({}, this.props, { ref: this.init.bind(this) });
-        return _react2.default.createElement(WrappedComponent, props);
+        var _this2 = this;
+
+        return _react2.default.createElement(WrappedComponent, _extends({}, this.props, { ref: function ref(node) {
+            return _this2.wci = node;
+          } }));
       }
     }]);
 
