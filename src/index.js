@@ -235,9 +235,8 @@ class RCarousel extends React.Component {
     this.goToSlide(loop ? idx + children.length : idx);
   }
 
-  handleItemClick = (e) => {
+  handleItemClick = (i, e) => {
     const {onClick, children} = this.props;
-    const i = e.target.getAttribute('data-index');
     const index = i % children.length;
     onClick && onClick(index, e);
   }
@@ -275,7 +274,7 @@ class RCarousel extends React.Component {
         )}
         ref={node => this.itemNodes[i] = node}
         style={{marginLeft: gap}}
-        onClick={this.handleItemClick}
+        onClick={() => this.handleItemClick(i)}
       >
         {item}
       </div>
