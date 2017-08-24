@@ -99,9 +99,6 @@ exports.default = function (WrappedComponent) {
         _this.shouldBlockScrollY = false;
         _this.setDelta({ x: 0, y: 0 });
         _this.prevDelta = { x: 0, y: 0 };
-        // if (this.shouldBlockScrollY) {
-        //   e.preventDefault();
-        // }
       }, _temp), _possibleConstructorReturn(_this, _ret);
     }
 

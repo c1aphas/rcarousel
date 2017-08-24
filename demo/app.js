@@ -18,7 +18,7 @@ class App extends React.Component {
           <h2 className={s.header}>
             Simple carousel
           </h2>
-          <div style={{width: '75%', margin: 'auto'}}>
+          <div style={{width: '65%', margin: 'auto'}}>
             <SimpleCarousel />
           </div>
         </div>

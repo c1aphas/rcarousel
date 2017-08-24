@@ -16,7 +16,7 @@ const distConfig = {
   stats: {
     children: false,
     assets:   true,
-    modules: false
+    modules:  false,
   },
   module: {
     rules: [
