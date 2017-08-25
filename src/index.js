@@ -48,9 +48,8 @@ class RCarousel extends React.Component {
     if (isChildrenCountChanged || isClonesCountChanged) {
       this.calcBasicValues();
       this.goToSlide(loop ? this.itemsOnScreen + currentIndex : currentIndex, true);
+      loop && onInit && onInit();
     }
-
-    loop && onInit && onInit();
   }
 
   componentWillUnmount() {
