@@ -222,7 +222,7 @@ var RCarousel = function (_React$Component) {
     value: function getChildrenWidth(itemWidths) {
       var total = 0;
       for (var i = 0; i < itemWidths.length; i++) {
-        total += itemWidths[i];
+        total += itemWidths[i].width;
       }
       return total;
     }
@@ -238,6 +238,14 @@ var RCarousel = function (_React$Component) {
         sum += width;
       }
       return checkpoints;
+    }
+  }, {
+    key: 'getDeltaInBounds',
+    value: function getDeltaInBounds(delta) {
+      var lastIndexDelta = this.innerNode.offsetWidth - this.widthTotal - this.innerPadding + this.props.gap;
+      if (delta > 0) return 0;
+      if (delta < lastIndexDelta) return Math.min(lastIndexDelta, 0);
+      return delta;
     }
   }, {
     key: 'calcBasicValues',
@@ -273,21 +281,13 @@ var RCarousel = function (_React$Component) {
       this.isToggled = false;
       var _props3 = this.props,
           disableCheckpoints = _props3.disableCheckpoints,
-          gap = _props3.gap,
           onSwiped = _props3.onSwiped,
           transitionDuration = _props3.transitionDuration;
 
       var nextDelta = this.currentDelta - deltaX;
-      var lastIndexDelta = this.innerNode.offsetWidth - this.widthTotal - this.innerPadding + gap;
 
       if (disableCheckpoints) {
-        if (nextDelta > 0) {
-          this.currentDelta = 0;
-        } else if (nextDelta <= lastIndexDelta) {
-          this.currentDelta = Math.min(lastIndexDelta, 0);
-        } else {
-          this.currentDelta = nextDelta;
-        }
+        this.currentDelta = this.getDeltaInBounds(nextDelta);
         this.setStylesWithPrefixes(this.currentDelta, transitionDuration);
       } else {
         var nextIndex = this.findSlideIndex(nextDelta);
@@ -320,28 +320,20 @@ var RCarousel = function (_React$Component) {
 
       var _props4 = this.props,
           transitionDuration = _props4.transitionDuration,
-          loop = _props4.loop,
           gap = _props4.gap,
           center = _props4.center,
           children = _props4.children;
 
       var lastIndexDelta = this.innerNode.offsetWidth - this.widthTotal - this.innerPadding + gap;
+      var item = this.itemWidths[nextIndex % children.length];
 
-      var nextDelta = -Math.floor(nextIndex / children.length) * this.childrenWidth;
-      nextDelta += this.itemWidths[nextIndex % children.length].offset;
+      var nextDelta = -Math.floor(nextIndex / children.length) * this.childrenWidth + item.offset;
 
       if (center) {
-        var addon = (this.innerNode.offsetWidth - this.itemWidths[nextIndex % children.length].width + gap) / 2;
-        nextDelta = Math.max(nextDelta + addon, lastIndexDelta);
+        nextDelta += (this.innerNode.offsetWidth - item.width + gap) / 2;
       }
 
-      if (!loop && nextDelta <= lastIndexDelta) {
-        // фикс для последнего слайда
-        this.currentDelta = Math.min(lastIndexDelta, 0);
-      } else {
-        this.currentDelta = Math.min(nextDelta, 0);
-      }
-
+      this.currentDelta = this.getDeltaInBounds(nextDelta);
       this.isLastReached = nextDelta <= lastIndexDelta;
       this.currentIndex = nextIndex;
 
