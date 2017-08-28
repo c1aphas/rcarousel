@@ -28,6 +28,7 @@ export default class TabCarousel extends React.Component {
             onClick={this.handleCategoryClick}
             classNames={sliderStyles}
             disableCheckpoints
+            center
             gap={30}
           >
             {categories.map(item =>
