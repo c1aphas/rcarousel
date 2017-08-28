@@ -34,9 +34,6 @@ exports.default = function (WrappedComponent) {
           _this.initialY = e.targetTouches[0].clientY;
           _this.wci.swipeStart && _this.wci.swipeStart(e);
         }
-        if (_this.shouldBlockScrollY) {
-          e.preventDefault();
-        }
       }, _this.handleTouchMove = function (e) {
         if (_this.isStopPropagationAllowed(IS_STRICT) && _this.wci.props.stopPropagation) {
           e.stopPropagation();
@@ -49,7 +46,6 @@ exports.default = function (WrappedComponent) {
           y: _this.initialY - e.targetTouches[0].clientY
         };
         _this.getDirection(nextDelta);
-        _this.setDelta(nextDelta);
         switch (_this.direction) {
           case DIRECTION_LEFT:
             if (!_this.shouldBlockScrollX) {
@@ -103,9 +99,6 @@ exports.default = function (WrappedComponent) {
         _this.shouldBlockScrollY = false;
         _this.setDelta({ x: 0, y: 0 });
         _this.prevDelta = { x: 0, y: 0 };
-        if (_this.shouldBlockScrollY) {
-          e.preventDefault();
-        }
       }, _temp), _possibleConstructorReturn(_this, _ret);
     }
 
@@ -146,10 +139,10 @@ exports.default = function (WrappedComponent) {
     }, {
       key: 'componentDidMount',
       value: function componentDidMount() {
-        this.wci.innerNode.addEventListener('touchstart', this.handleTouchStart, false);
+        this.wci.innerNode.addEventListener('touchstart', this.handleTouchStart, _supportsPassive2.default ? { passive: true } : false);
         this.wci.innerNode.addEventListener('touchmove', this.handleTouchMove, false);
-        this.wci.innerNode.addEventListener('touchend', this.handleTouchEnd, false);
-        this.wci.innerNode.addEventListener('touchcancel', this.handleTouchEnd, false);
+        this.wci.innerNode.addEventListener('touchend', this.handleTouchEnd, _supportsPassive2.default ? { passive: true } : false);
+        this.wci.innerNode.addEventListener('touchcancel', this.handleTouchEnd, _supportsPassive2.default ? { passive: true } : false);
         this.setIosHack();
       }
     }, {
@@ -184,6 +177,10 @@ exports.default = function (WrappedComponent) {
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
+
+var _supportsPassive = require('./supports-passive');
+
+var _supportsPassive2 = _interopRequireDefault(_supportsPassive);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
