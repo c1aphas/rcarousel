@@ -48,9 +48,8 @@ class RCarousel extends React.Component {
     if (isChildrenCountChanged || isClonesCountChanged) {
       this.calcBasicValues();
       this.goToSlide(loop ? this.itemsOnScreen + currentIndex : currentIndex, true);
+      loop && onInit && onInit();
     }
-
-    loop && onInit && onInit();
   }
 
   componentWillUnmount() {
@@ -72,10 +71,13 @@ class RCarousel extends React.Component {
   }
 
   getItemWidths() {
+    let offset = 0;
     const itemWidths = [];
     for (let i = 0; i < this.props.children.length; i++) {
       if (this.itemNodes[i]) {
-        itemWidths.push(this.itemNodes[i].offsetWidth + this.props.gap);
+        const width = this.itemNodes[i].offsetWidth + this.props.gap;
+        itemWidths.push({width, offset});
+        offset -= width;
       }
     }
     return itemWidths;
@@ -84,7 +86,7 @@ class RCarousel extends React.Component {
   getChildrenWidth(itemWidths) {
     let total = 0;
     for (let i = 0; i < itemWidths.length; i++) {
-      total += itemWidths[i];
+      total += itemWidths[i].width;
     }
     return total;
   }
@@ -92,11 +94,21 @@ class RCarousel extends React.Component {
   getCheckpoints(itemWidths) {
     let sum = 0;
     const checkpoints = [];
+
     for (let i = 0; i < itemWidths.length * this.state.clonesCount; i++) {
-      checkpoints.push((itemWidths[i % itemWidths.length] / 2) + sum);
-      sum += itemWidths[i % itemWidths.length];
+      const width = itemWidths[i % itemWidths.length].width;
+      checkpoints.push((width / 2) + sum);
+      sum += width;
     }
     return checkpoints;
+  }
+
+  getDeltaInBounds(delta) {
+    const lastIndexDelta = (this.innerNode.offsetWidth - this.widthTotal - this.innerPadding)
+      + this.props.gap;
+    if (delta > 0) return 0;
+    if (delta < lastIndexDelta) return Math.min(lastIndexDelta, 0);
+    return delta;
   }
 
   calcBasicValues() {
@@ -142,18 +154,11 @@ class RCarousel extends React.Component {
 
   swiped(e, {x: deltaX}) {
     this.isToggled = false;
-    const {disableCheckpoints, gap, onSwiped, transitionDuration} = this.props;
+    const {disableCheckpoints, onSwiped, transitionDuration} = this.props;
     const nextDelta = this.currentDelta - deltaX;
-    const lastIndexDelta = (this.innerNode.offsetWidth - this.widthTotal - this.innerPadding) + gap;
 
     if (disableCheckpoints) {
-      if (nextDelta > 0) {
-        this.currentDelta = 0;
-      } else if (nextDelta <= lastIndexDelta) {
-        this.currentDelta = Math.min(lastIndexDelta, 0);
-      } else {
-        this.currentDelta = nextDelta;
-      }
+      this.currentDelta = this.getDeltaInBounds(nextDelta);
       this.setStylesWithPrefixes(this.currentDelta, transitionDuration);
     } else {
       const nextIndex = this.findSlideIndex(nextDelta);
@@ -201,20 +206,17 @@ class RCarousel extends React.Component {
   goToSlide(nextIndex, withoutAnimation) {
     if (nextIndex < 0 || nextIndex >= this.itemNodes.length || this.innerNode === null) return;
 
-    const {transitionDuration, loop, gap, children} = this.props;
+    const {transitionDuration, gap, center, children} = this.props;
     const lastIndexDelta = (this.innerNode.offsetWidth - this.widthTotal - this.innerPadding) + gap;
+    const item = this.itemWidths[nextIndex % children.length];
 
-    let nextDelta = 0;
-    for (let i = 0; i < nextIndex; i++) {
-      nextDelta -= this.itemWidths[i % children.length];
+    let nextDelta = (-Math.floor(nextIndex / children.length) * this.childrenWidth) + item.offset;
+
+    if (center) {
+      nextDelta += ((this.innerNode.offsetWidth - item.width) + gap) / 2;
     }
 
-    if (!loop && nextDelta <= lastIndexDelta) {  // фикс для последнего слайда
-      this.currentDelta = Math.min(lastIndexDelta, 0);
-    } else {
-      this.currentDelta = nextDelta;
-    }
-
+    this.currentDelta = this.getDeltaInBounds(nextDelta);
     this.isLastReached = nextDelta <= lastIndexDelta;
     this.currentIndex = nextIndex;
 
@@ -378,6 +380,7 @@ RCarousel.defaultProps = {
   prevNext:           false,
   stopPropagation:    false,
   loop:               false,
+  center:             false,
   onInit:             () => {},
   onSwiped:           () => {},
   onClick:            () => {},
@@ -401,6 +404,7 @@ RCarousel.propTypes = {
     buttonPrev:           pt.string,
   }),
   loop:               pt.bool,
+  center:             pt.bool,
   pagination:         pt.bool,
   prevNext:           pt.bool,
   disableCheckpoints: pt.bool,
