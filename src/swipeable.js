@@ -1,4 +1,5 @@
 import React from 'react';
+import isSupportsPassive from './supports-passive';
 
 const DIRECTION_LEFT = 0;
 const DIRECTION_RIGHT = 1;
@@ -52,10 +53,10 @@ export default function(WrappedComponent) {
     }
 
     componentDidMount() {
-      this.wci.innerNode.addEventListener('touchstart', this.handleTouchStart, false);
+      this.wci.innerNode.addEventListener('touchstart', this.handleTouchStart, isSupportsPassive ? {passive: true} : false);
       this.wci.innerNode.addEventListener('touchmove', this.handleTouchMove, false);
-      this.wci.innerNode.addEventListener('touchend', this.handleTouchEnd, false);
-      this.wci.innerNode.addEventListener('touchcancel', this.handleTouchEnd, false);
+      this.wci.innerNode.addEventListener('touchend', this.handleTouchEnd, isSupportsPassive ? {passive: true} : false);
+      this.wci.innerNode.addEventListener('touchcancel', this.handleTouchEnd, isSupportsPassive ? {passive: true} : false);
       this.setIosHack();
     }
 
@@ -77,9 +78,6 @@ export default function(WrappedComponent) {
         this.initialY = e.targetTouches[0].clientY;
         this.wci.swipeStart && this.wci.swipeStart(e);
       }
-      if (this.shouldBlockScrollY) {
-        e.preventDefault();
-      }
     }
 
     setDelta(nextDelta) {
@@ -99,7 +97,6 @@ export default function(WrappedComponent) {
         y: this.initialY - e.targetTouches[0].clientY,
       };
       this.getDirection(nextDelta);
-      this.setDelta(nextDelta);
       switch (this.direction) {
         case DIRECTION_LEFT:
           if (!this.shouldBlockScrollX) {
@@ -155,9 +152,6 @@ export default function(WrappedComponent) {
       this.shouldBlockScrollY = false;
       this.setDelta({x: 0, y: 0});
       this.prevDelta = {x: 0, y: 0};
-      if (this.shouldBlockScrollY) {
-        e.preventDefault();
-      }
     }
 
     render() {

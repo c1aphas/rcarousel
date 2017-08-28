@@ -39,6 +39,4 @@ class App extends React.Component {
   }
 }
 
-const content = document.getElementById('content');
-
-ReactDom.render(<App />, content);
+ReactDom.render(<App />, document.getElementById('content'));
