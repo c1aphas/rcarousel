@@ -59,6 +59,10 @@ class RCarousel extends React.Component {
 
   setStylesWithPrefixes(delta, duration = 0.3) {
     requestAnimationFrame(() => {
+      if (!this.innerNode) {
+        return;
+      }
+
       Object.assign(this.innerNode.style, {
         transform:          `translate3d(${delta}px, 0, 0)`,
         transitionDuration: `${duration}s`,
