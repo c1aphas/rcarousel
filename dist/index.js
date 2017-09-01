@@ -191,6 +191,10 @@ var RCarousel = function (_React$Component) {
       var duration = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0.3;
 
       requestAnimationFrame(function () {
+        if (!_this2.innerNode) {
+          return;
+        }
+
         Object.assign(_this2.innerNode.style, {
           transform: 'translate3d(' + delta + 'px, 0, 0)',
           transitionDuration: duration + 's'
@@ -293,7 +297,7 @@ var RCarousel = function (_React$Component) {
         this.isToggled = nextIndex !== this.state.currentIndex;
         this.goToSlide(nextIndex);
       }
-      onSwiped && onSwiped(this.currentIndex);
+      onSwiped && onSwiped(this.state.realIndex);
     }
   }, {
     key: 'findSlideIndex',
