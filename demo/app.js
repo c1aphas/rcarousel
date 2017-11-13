@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDom from 'react-dom';
-import injectTapEventPlugin from 'react-tap-event-plugin';
+// import injectTapEventPlugin from 'react-tap-event-plugin';
 import {
   SimpleCarousel,
   InfiniteCarousel,
@@ -8,7 +8,7 @@ import {
 } from './components';
 import s from './styles.scss';
 
-injectTapEventPlugin();
+// injectTapEventPlugin();
 
 class App extends React.Component {
   render() {
