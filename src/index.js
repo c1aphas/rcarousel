@@ -30,7 +30,7 @@ class RCarousel extends React.Component {
       this.goToSlide(currentIndex, true);
     }
 
-    this.setState({rendered: true});
+    this.setState({rendered: true}, () => this.checkLazyImages());
     onInit && onInit();
   }
 
@@ -115,6 +115,37 @@ class RCarousel extends React.Component {
     return delta;
   }
 
+  setImageSrc(index, src) {
+    const items = this.itemNodes.filter(item => item.dataset.originalIndex === index);
+    for (let i = 0; i < items.length; i++) {
+      Array.prototype.filter
+        .call(items[i].querySelectorAll('img[data-src]'), img => img.src === '' && img.dataset.src === src)
+        .forEach(img => img.src = src);
+    }
+  }
+
+  isNodeInViewport(node) {
+    const {left, right} = node.getBoundingClientRect();
+    /* eslint-disable yoda */
+    return (0 <= left && left <= window.innerWidth)
+      || (0 <= right && right <= window.innerWidth)
+      || (left <= 0 && window.innerWidth <= right);
+  }
+
+  checkLazyImages() {
+    if (!this.props.lazy) return;
+
+    for (let i = 0; i < this.itemNodes.length; i++) {
+      const item = this.itemNodes[i];
+      const imgs = Array.prototype.filter.call(item.querySelectorAll('img[data-src]'), img => img.src === '');
+      for (let j = 0; j < imgs.length; j++) {
+        if (this.isNodeInViewport(imgs[j])) {
+          this.setImageSrc(item.dataset.originalIndex, imgs[j].dataset.src);
+        }
+      }
+    }
+  }
+
   calcBasicValues() {
     this.itemWidths = this.getItemWidths();
     this.childrenWidth = this.getChildrenWidth(this.itemWidths);
@@ -170,6 +201,7 @@ class RCarousel extends React.Component {
       this.goToSlide(nextIndex);
     }
     onSwiped && onSwiped(this.state.realIndex);
+    this.checkLazyImages();
   }
 
   findSlideIndex(delta) {
@@ -269,11 +301,12 @@ class RCarousel extends React.Component {
   }
 
   renderItem = (item, i) => {
-    const {classNames, gap} = this.props;
+    const {classNames, gap, children} = this.props;
     return (
       <div
         key={i}
         data-index={i}
+        data-original-index={i % children.length}
         className={cn(
           classNames.item,
           {[classNames.itemActive]: this.isItemActive(i)},
@@ -385,6 +418,7 @@ RCarousel.defaultProps = {
   stopPropagation:    false,
   loop:               false,
   center:             false,
+  lazy:               false,
   onInit:             () => {},
   onSwiped:           () => {},
   onClick:            () => {},
@@ -409,6 +443,7 @@ RCarousel.propTypes = {
   }),
   loop:               pt.bool,
   center:             pt.bool,
+  lazy:               pt.bool,
   pagination:         pt.bool,
   prevNext:           pt.bool,
   disableCheckpoints: pt.bool,

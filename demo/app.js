@@ -4,6 +4,7 @@ import {
   SimpleCarousel,
   InfiniteCarousel,
   TabCarousel,
+  InfiniteCarouselImages,
 } from './components';
 import s from './styles.scss';
 
@@ -29,7 +30,7 @@ class App extends React.Component {
           <h2 className={s.header}>
             Tab carousel
           </h2>
-          <TabCarousel />
+          <InfiniteCarouselImages />
         </div>
       </section>
     );
