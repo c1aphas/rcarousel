@@ -263,10 +263,10 @@ var RCarousel = function (_React$Component) {
         return item.dataset.originalIndex === index;
       });
       for (var i = 0; i < items.length; i++) {
-        Array.prototype.filter.call(items[i].querySelectorAll('img[data-src]'), function (img) {
-          return img.src === '' && img.dataset.src === src;
+        Array.prototype.filter.call(items[i].querySelectorAll('div[data-src]'), function (img) {
+          return img.dataset.src === src;
         }).forEach(function (img) {
-          return img.src = src;
+          return img.style.backgroundImage = 'url(\'' + src + '\')';
         });
       }
     }
@@ -288,12 +288,12 @@ var RCarousel = function (_React$Component) {
 
       for (var i = 0; i < this.itemNodes.length; i++) {
         var item = this.itemNodes[i];
-        var imgs = Array.prototype.filter.call(item.querySelectorAll('img[data-src]'), function (img) {
-          return img.src === '';
-        });
-        for (var j = 0; j < imgs.length; j++) {
-          if (this.isNodeInViewport(imgs[j])) {
-            this.setImageSrc(item.dataset.originalIndex, imgs[j].dataset.src);
+        if (item) {
+          var imgs = item.querySelectorAll('div[data-src]');
+          for (var j = 0; j < imgs.length; j++) {
+            if (this.isNodeInViewport(imgs[j])) {
+              this.setImageSrc(item.dataset.originalIndex, imgs[j].dataset.src);
+            }
           }
         }
       }
@@ -368,6 +368,8 @@ var RCarousel = function (_React$Component) {
   }, {
     key: 'goToSlide',
     value: function goToSlide(nextIndex, withoutAnimation) {
+      var _this4 = this;
+
       if (nextIndex < 0 || nextIndex >= this.itemNodes.length || this.innerNode === null) return;
 
       var _props4 = this.props,
@@ -393,6 +395,8 @@ var RCarousel = function (_React$Component) {
       this.setState({
         currentIndex: nextIndex,
         realIndex: nextIndex % children.length
+      }, function () {
+        return _this4.checkLazyImages();
       });
     }
   }, {
@@ -440,7 +444,7 @@ var RCarousel = function (_React$Component) {
   }, {
     key: 'renderPagination',
     value: function renderPagination() {
-      var _this4 = this;
+      var _this5 = this;
 
       var classNames = this.props.classNames;
 
@@ -454,8 +458,8 @@ var RCarousel = function (_React$Component) {
           return _react2.default.createElement('button', {
             key: item.key || i,
             'data-idx': i,
-            className: (0, _classnames2.default)(classNames.paginationItem, _defineProperty({}, classNames.paginationItemActive, _this4.isItemActive(i))),
-            onClick: _this4.handlePaginationClick
+            className: (0, _classnames2.default)(classNames.paginationItem, _defineProperty({}, classNames.paginationItemActive, _this5.isItemActive(i))),
+            onClick: _this5.handlePaginationClick
           });
         })
       );
@@ -463,7 +467,7 @@ var RCarousel = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this5 = this;
+      var _this6 = this;
 
       var classNames = this.props.classNames;
 
@@ -478,7 +482,7 @@ var RCarousel = function (_React$Component) {
           {
             className: (0, _classnames2.default)(classNames.inner),
             ref: function ref(node) {
-              return _this5.innerNode = node;
+              return _this6.innerNode = node;
             },
             onTransitionEnd: this.handleTransitionEnd
           },

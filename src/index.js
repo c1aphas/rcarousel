@@ -119,8 +119,8 @@ class RCarousel extends React.Component {
     const items = this.itemNodes.filter(item => item.dataset.originalIndex === index);
     for (let i = 0; i < items.length; i++) {
       Array.prototype.filter
-        .call(items[i].querySelectorAll('img[data-src]'), img => img.src === '' && img.dataset.src === src)
-        .forEach(img => img.src = src);
+        .call(items[i].querySelectorAll('div[data-src]'), img => img.dataset.src === src)
+        .forEach(img => img.style.backgroundImage = `url('${src}')`);
     }
   }
 
@@ -137,10 +137,12 @@ class RCarousel extends React.Component {
 
     for (let i = 0; i < this.itemNodes.length; i++) {
       const item = this.itemNodes[i];
-      const imgs = Array.prototype.filter.call(item.querySelectorAll('img[data-src]'), img => img.src === '');
-      for (let j = 0; j < imgs.length; j++) {
-        if (this.isNodeInViewport(imgs[j])) {
-          this.setImageSrc(item.dataset.originalIndex, imgs[j].dataset.src);
+      if (item) {
+        const imgs = item.querySelectorAll('div[data-src]');
+        for (let j = 0; j < imgs.length; j++) {
+          if (this.isNodeInViewport(imgs[j])) {
+            this.setImageSrc(item.dataset.originalIndex, imgs[j].dataset.src);
+          }
         }
       }
     }
@@ -263,7 +265,7 @@ class RCarousel extends React.Component {
     this.setState({
       currentIndex: nextIndex,
       realIndex:    nextIndex % children.length,
-    });
+    }, () => this.checkLazyImages());
   }
 
   handlePaginationClick = (e) => {
