@@ -81,6 +81,8 @@ var RCarousel = function (_React$Component) {
           _this.goToSlide(_this.state.currentIndex - _this.itemsOnScreen, true);
         }
       }
+
+      _this.checkLazyImages();
     }, _this.handlePaginationClick = function (e) {
       e.stopPropagation();
       var _this$props2 = _this.props,

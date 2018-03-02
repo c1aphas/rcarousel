@@ -239,6 +239,8 @@ class RCarousel extends React.Component {
         this.goToSlide(this.state.currentIndex - this.itemsOnScreen, true);
       }
     }
+
+    this.checkLazyImages();
   }
 
   goToSlide(nextIndex, withoutAnimation) {
