@@ -96,12 +96,13 @@ class RCarousel extends React.Component {
   }
 
   getCheckpoints(itemWidths) {
+    const {checkpointThreshold} = this.props;
     let sum = 0;
     const checkpoints = [];
 
     for (let i = 0; i < itemWidths.length * this.state.clonesCount; i++) {
       const width = itemWidths[i % itemWidths.length].width;
-      checkpoints.push((width / 2) + sum);
+      checkpoints.push((width / checkpointThreshold) + sum);
       sum += width;
     }
     return checkpoints;
@@ -380,16 +381,17 @@ RCarousel.defaultProps = {
     buttonNext:           '',
     buttonPrev:           '',
   },
-  pagination:         false,
-  prevNext:           false,
-  stopPropagation:    false,
-  loop:               false,
-  center:             false,
-  onInit:             () => {},
-  onSwiped:           () => {},
-  onClick:            () => {},
-  currentIndex:       0,
-  disableCheckpoints: false,
+  pagination:          false,
+  checkpointThreshold: 2,
+  prevNext:            false,
+  stopPropagation:     false,
+  loop:                false,
+  center:              false,
+  onInit:              () => {},
+  onSwiped:            () => {},
+  onClick:             () => {},
+  currentIndex:        0,
+  disableCheckpoints:  false,
 };
 
 RCarousel.propTypes = {
@@ -407,12 +409,13 @@ RCarousel.propTypes = {
     buttonNext:           pt.string,
     buttonPrev:           pt.string,
   }),
-  loop:               pt.bool,
-  center:             pt.bool,
-  pagination:         pt.bool,
-  prevNext:           pt.bool,
-  disableCheckpoints: pt.bool,
-  children:           pt.arrayOf(
+  loop:                pt.bool,
+  center:              pt.bool,
+  pagination:          pt.bool,
+  prevNext:            pt.bool,
+  disableCheckpoints:  pt.bool,
+  checkpointThreshold: pt.number,
+  children:            pt.arrayOf(
     pt.node
   ).isRequired,
   onInit:       pt.func,
