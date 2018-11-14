@@ -7,6 +7,8 @@ const DIRECTION_UP = 2;
 const DIRECTION_DOWN = 3;
 const IS_STRICT = true;
 
+const FAST_ACTION = 300;
+
 export default function(WrappedComponent) {
   return class Swipeable extends React.PureComponent {
     initialX = 0
@@ -67,7 +69,9 @@ export default function(WrappedComponent) {
       this.wci.innerNode.removeEventListener('touchcancel', this.handleTouchEnd);
     }
 
+    touchStartTime = 0;
     handleTouchStart = (e) => {
+      this.touchStartTime = Date.now();
       this.shouldBlockScrollX = false;
       this.shouldBlockScrollY = false;
       if (this.isStopPropagationAllowed() && this.wci.props.stopPropagation) {
@@ -139,13 +143,15 @@ export default function(WrappedComponent) {
         e.stopPropagation();
       }
 
+      const isFastAction = (Date.now() - this.touchStartTime) <= FAST_ACTION;
+
       this.delta = {
         x: this.shouldBlockScrollX ? 0 : this.delta.x,
         y: this.shouldBlockScrollY ? 0 : this.delta.y,
       };
 
       if (this.delta.x !== 0) {
-        this.wci.swiped && this.wci.swiped(e, this.delta);
+        this.wci.swiped && this.wci.swiped(e, this.delta, isFastAction);
       }
 
       this.shouldBlockScrollX = false;

@@ -116,6 +116,24 @@ class RCarousel extends React.Component {
     return delta;
   }
 
+  getPrevIndex() {
+    const {loop} = this.props;
+    if (!loop && this.currentIndex === 0) {
+      return this.currentIndex;
+    }
+    return this.currentIndex - 1;
+  }
+
+  getNextIndex() {
+    const {loop, children} = this.props;
+
+    if (!loop && this.currentIndex === children.length - 1) {
+      return this.currentIndex;
+    }
+
+    return this.currentIndex + 1;
+  }
+
   calcBasicValues() {
     this.itemWidths = this.getItemWidths();
     this.childrenWidth = this.getChildrenWidth(this.itemWidths);
@@ -157,7 +175,7 @@ class RCarousel extends React.Component {
     this.setStylesWithPrefixes(this.swippingDelta, 0);
   }
 
-  swiped(e, {x: deltaX}) {
+  swiped(e, {x: deltaX}, isFastAction) {
     this.isToggled = false;
     const {disableCheckpoints, onSwiped, transitionDuration} = this.props;
     const nextDelta = this.currentDelta - deltaX;
@@ -166,14 +184,19 @@ class RCarousel extends React.Component {
       this.currentDelta = this.getDeltaInBounds(nextDelta);
       this.setStylesWithPrefixes(this.currentDelta, transitionDuration);
     } else {
-      const nextIndex = this.findSlideIndex(nextDelta);
+      let nextIndex;
+      if (isFastAction) {
+        nextIndex = deltaX > 0 ? this.getNextIndex() : this.getPrevIndex();
+      } else {
+        nextIndex = this.findSlideIndexByCheckpoints(nextDelta);
+      }
       this.isToggled = nextIndex !== this.state.currentIndex;
       this.goToSlide(nextIndex);
     }
     onSwiped && onSwiped(this.state.realIndex);
   }
 
-  findSlideIndex(delta) {
+  findSlideIndexByCheckpoints(delta) {
     const absDelta = Math.abs(delta);
     if (delta > 0 || absDelta < this.checkpoints[0]) {
       return 0;
@@ -181,6 +204,7 @@ class RCarousel extends React.Component {
     if (absDelta > this.checkpoints[this.checkpoints.length - 1]) {
       return this.checkpoints.length - 1;
     }
+
     for (let i = 0; i < this.checkpoints.length - 1; i++) {
       if (absDelta >= this.checkpoints[i] && absDelta < this.checkpoints[i + 1]) {
         return i + 1;
