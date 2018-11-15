@@ -21,6 +21,8 @@
 %RCitem {
   display: flex;
   flex-shrink: 0;
+  //stop flick background images on ios
+  -webkit-transform-style: preserve-3d;
 
   &:first-child {
     margin-left: 0 !important;
