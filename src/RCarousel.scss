@@ -15,12 +15,17 @@
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   -ms-backface-visibility: visible;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   perspective: 1000;
 }
 
 %RCitem {
   display: flex;
   flex-shrink: 0;
+  //stop flick background images on ios
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
 
   &:first-child {
     margin-left: 0 !important;
