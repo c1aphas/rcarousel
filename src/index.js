@@ -5,7 +5,7 @@ import swipeable from './swipeable';
 
 const SCREEN_FACTOR = 3;
 
-class RCarousel extends React.Component {
+class RCarousel extends React.PureComponent {
   state = {
     clonesCount:  1,
     realIndex:    0,
